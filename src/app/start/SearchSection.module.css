@@ -1,0 +1,48 @@
+.section {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-5);
+  overflow-y: auto;
+  height: 100%;
+  width: 100%;
+  /* for when you select the search box, the focus outline will get cut off if we don't add some padding */
+  padding-inline: 1px;
+}
+
+.title {
+  font-size: var(--font-size-big);
+  color: var(--color-layer1-fg-dim);
+  margin: 0;
+  padding-block-end: var(--spacing-5);
+  height: var(--size-4);
+}
+
+.list {
+  flex-grow: 1;
+  overflow-y: auto;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: min-content;
+  gap: var(--spacing-3);
+
+  @container (min-width: 650px) {
+    & {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+}
+
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-layer1-fg-dim);
+  padding: var(--spacing-5);
+}
+
+.no-results {
+  color: var(--color-layer1-fg);
+  text-align: center;
+  font-size: var(--font-size-medium);
+}

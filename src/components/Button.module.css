@@ -1,89 +1,94 @@
-.default,
-.ghost,
-.ghost-text {
-  --button-spacing: var(--spacing-2);
-  font-size: var(--font-size-small);
+@layer base {
+  .default,
+  .primary,
+  .ghost {
+    --button-spacing: var(--spacing-2);
+    font-size: var(--font-size-small);
 
-  &:focus-visible {
-    outline: var(--outline-focused);
-  }
-}
-
-.default {
-  color: var(--color-button-fg);
-  background-color: var(--color-button-bg);
-  border: var(--border-button);
-  border-radius: var(--border-radius);
-  padding: var(--button-spacing);
-  cursor: pointer;
-
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: var(--button-spacing);
-
-  &:hover {
-    background-color: var(--color-button-bg-hover);
+    &:focus-visible {
+      outline: var(--outline-focused);
+    }
   }
 
-  &:active {
-    background-color: var(--color-button-bg-active);
+  .default {
+    color: var(--color-button-fg);
+    background-color: var(--color-button-bg);
+    border: var(--border-button);
+    border-radius: var(--border-radius);
+    padding: var(--button-spacing);
+    cursor: pointer;
+
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--button-spacing);
+
+    &:hover {
+      background-color: var(--color-button-bg-hover);
+    }
+
+    &:active {
+      background-color: var(--color-button-bg-active);
+    }
+
+    &:disabled {
+      color: var(--color-button-fg-disabled);
+      background-color: var(--color-button-bg-disabled);
+    }
   }
 
-  &:disabled {
-    color: var(--color-button-fg-disabled);
-    background-color: var(--color-button-bg-disabled);
-  }
-}
+  .primary {
+    color: var(--color-accent-fg);
+    background-color: var(--color-accent);
+    border: none;
+    border-radius: var(--border-radius);
+    padding: var(--button-spacing);
+    cursor: pointer;
 
-.ghost {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  color: var(--color-ghost-button-fg);
-  background-color: transparent;
-  border: none;
-  border-radius: var(--border-radius);
-  padding: var(--button-spacing);
-  cursor: pointer;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--button-spacing);
 
-  &:hover,
-  &[data-active="true"] {
-    background-color: var(--color-ghost-button-hover-bg);
-  }
+    &:hover {
+      color: color-mix(in hsl, var(--color-accent-fg) 95%, transparent);
+      background-color: color-mix(in hsl, var(--color-accent) 93%, transparent);
+    }
 
-  &:active {
-    background-color: var(--color-ghost-button-active-bg);
-  }
+    &:active {
+      color: color-mix(in hsl, var(--color-accent-fg) 97%, transparent);
+      background-color: color-mix(in hsl, var(--color-accent) 92%, transparent);
+    }
 
-  &:disabled {
-    color: var(--color-ghost-button-disable-fg);
-    background-color: var(--color-ghost-button-disable-bg);
-  }
-}
-
-.ghost-text {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-
-  padding: 0;
-
-  background: transparent;
-  border: none;
-  color: var(--color-ghost-text-button);
-
-  cursor: pointer;
-
-  &:hover {
-    color: var(--color-ghost-text-button-hover);
+    &:disabled {
+      color: color-mix(in hsl, var(--color-accent-fg) 60%, transparent);
+      background: color-mix(in hsl, var(--color-accent) 60%, transparent);
+    }
   }
 
-  &:active {
-    color: var(--color-ghost-text-button-active);
-  }
+  .ghost {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    color: var(--color-ghost-button-fg);
+    background-color: transparent;
+    border: none;
+    border-radius: var(--border-radius);
+    padding: var(--button-spacing);
+    cursor: pointer;
 
-  &:disabled {
-    color: var(--color-ghost-text-button-disabled);
+    &:hover,
+    &[data-active="true"] {
+      background-color: var(--color-ghost-button-hover-bg);
+    }
+
+    &:active {
+      background-color: var(--color-ghost-button-active-bg);
+    }
+
+    &:disabled {
+      color: var(--color-ghost-button-disabled-fg);
+      background-color: var(--color-ghost-button-disabled-bg);
+    }
   }
 }

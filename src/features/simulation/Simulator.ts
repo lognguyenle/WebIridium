@@ -61,8 +61,6 @@ export type TimeCourseResult = {
     title: string;
     values: number[];
   }[];
-  // Set of column titles. For performance reasons.
-  columnSet: Set<string>;
 };
 
 export type SteadyStateResultItem = {

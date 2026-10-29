@@ -58,3 +58,19 @@ export const getPaletteColor = (
     .mix(PALETTES[palette].start, PALETTES[palette].end, percent, "oklab")
     .hex("rgb");
 };
+
+/**
+ * Generate a gradient array of colors from a palette for use in echarts visualMap.
+ * @param palette - The palette to use (excluding "Custom")
+ * @param steps - Number of color steps in the gradient (default: 11)
+ * @returns Array of hex color strings
+ */
+export const getPaletteGradient = (
+  palette: Exclude<Palette, "Custom">,
+  steps: number = 11,
+): string[] => {
+  const scale = chroma.scale([PALETTES[palette].start, PALETTES[palette].end]);
+  return Array.from({ length: steps }, (_, i) =>
+    scale(i / (steps - 1)).hex("rgb"),
+  );
+};

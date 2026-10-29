@@ -17,12 +17,21 @@ export const renderFlush = async (node: React.ReactNode) => {
   await new Promise((resolve) => setTimeout(resolve, 0));
 };
 
-const TestApp = ({ children }: { children: React.ReactNode }) => {
+const TestApp = ({
+  shouldStubActiveFile = true,
+  children,
+}: {
+  shouldStubActiveFile?: boolean;
+  children: React.ReactNode;
+}) => {
   const didInitialLoadRef = useRef(false);
   return (
     <TooltipProvider>
       <ToastProvider>
-        <WorkspaceProvider didInitialLoadRef={didInitialLoadRef}>
+        <WorkspaceProvider
+          didInitialLoadRef={didInitialLoadRef}
+          shouldStubActiveFile={shouldStubActiveFile}
+        >
           {children}
         </WorkspaceProvider>
       </ToastProvider>
@@ -33,6 +42,11 @@ const TestApp = ({ children }: { children: React.ReactNode }) => {
 /**
  * Same as testing-library's render function, additionally wrapping stores so they don't persist between tests.
  */
-export const renderWithinWorkspace = async (node: React.ReactNode) => {
-  await renderFlush(<TestApp>{node}</TestApp>);
+export const renderWithinWorkspace = async (
+  node: React.ReactNode,
+  { shouldStubActiveFile = true }: { shouldStubActiveFile?: boolean } = {},
+) => {
+  await renderFlush(
+    <TestApp shouldStubActiveFile={shouldStubActiveFile}>{node}</TestApp>,
+  );
 };

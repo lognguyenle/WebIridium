@@ -1,6 +1,10 @@
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 
-import { editorFontSizeAtom, themeOptionAtom } from "@/globals/appearance";
+import {
+  editorFontSizeAtom,
+  themeOptionAtom,
+  type ThemeOption,
+} from "@/globals/appearance";
 import {
   getSimulatorName,
   SIMULATOR_LIST,
@@ -44,14 +48,18 @@ const GlobalSettingsPanel = () => {
             name="Theme"
             options={themeOptions}
             value={themeOption}
-            onChange={setThemeOption as (theme: string) => void}
+            onChange={(newTheme) => {
+              setThemeOption(newTheme as ThemeOption);
+            }}
           />
           <NumericSliderProperty
             name="Editor Font Size"
             min={8}
             max={32}
             value={editorFontSize}
-            onChange={setEditorFontSize}
+            onChange={(newSize) => {
+              setEditorFontSize(newSize);
+            }}
           />
 
           <PropertyHeading>Simulation</PropertyHeading>
@@ -59,7 +67,9 @@ const GlobalSettingsPanel = () => {
             name="Simulator"
             options={simulatorOptions}
             value={getSimulatorName(simulator)}
-            onChange={(name) => updateSimulator(name)}
+            onChange={(name) => {
+              updateSimulator(name);
+            }}
           />
         </PropertyList>
       </div>

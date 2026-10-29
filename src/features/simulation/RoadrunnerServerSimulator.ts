@@ -110,7 +110,6 @@ export class RoadrunnerServerSimulator extends Simulator {
         title: name,
         values: result.rows.map((row) => row[i]),
       })),
-      columnSet: new Set(result.columnNames),
     };
   }
 

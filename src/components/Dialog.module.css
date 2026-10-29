@@ -9,7 +9,6 @@
   border-radius: var(--border-radius-large);
   padding: var(--spacing-dialog);
   box-shadow: var(--shadow-medium);
-  animation: contentShow var(--timing-fast) ease-in-out;
 }
 
 .top {
@@ -32,10 +31,8 @@
 
 .close {
   line-height: 0;
-  background-color: transparent;
   border: none;
-  color: var(--color-layer1-fg-dim);
-  padding: 0;
+  padding: var(--spacing-1);
   cursor: pointer;
 
   &:focus-visible {
@@ -47,15 +44,4 @@
   background-color: rgba(0, 0, 0, 0.6);
   position: fixed;
   inset: 0;
-}
-
-@keyframes contentShow {
-  from {
-    opacity: 0;
-    transform: translate(-50%, -48%) scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-  }
 }

@@ -1,0 +1,77 @@
+.item {
+  display: flex;
+  flex-direction: row;
+  position: relative;
+
+  background: var(--color-card-bg);
+  border: var(--border-card);
+  border-radius: var(--border-radius);
+
+  &:hover {
+    background-color: var(--color-card-bg-hover);
+  }
+
+  &:active {
+    background-color: var(--color-card-bg-active);
+  }
+
+  &:has(.main:disabled) {
+    background-color: var(--color-card-bg-disabled);
+  }
+}
+
+.main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+
+  cursor: pointer;
+  text-align: left;
+  flex-grow: 1;
+  background: none;
+  border: none;
+  padding: var(--spacing-4);
+
+  &:focus-visible {
+    outline: var(--outline-focused);
+  }
+
+  &:disabled * {
+    color: var(--color-card-fg-very-dim);
+  }
+}
+
+.name {
+  color: var(--color-card-fg);
+  font-weight: normal;
+  margin: 0;
+  font-size: var(--font-size-medium);
+}
+
+.number {
+  color: var(--color-card-fg-dim);
+  font-size: var(--font-size-medium);
+}
+
+.citation,
+.synopsis {
+  font-size: var(--font-size-medium);
+  margin: 0;
+}
+
+.citation {
+  color: color-mix(in oklch, var(--color-card-fg), var(--color-accent) 60%);
+}
+
+.synopsis {
+  color: var(--color-layer3-fg-dim);
+}
+
+.loader {
+  display: block;
+  position: absolute;
+  color: var(--color-card-fg-dim);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}

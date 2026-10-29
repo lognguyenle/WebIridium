@@ -1,14 +1,28 @@
-import type { SimResult } from "@/types/copasi.js";
+import type { SimResult } from "@/vendor/copasi";
 import type { WorkerType } from "../workers.ts";
 import {
   createMockWorkerMessageHandler,
   MockWorker,
 } from "@/testing-utils/mockWorker.ts";
+import type { FileSystemAction } from "@/workers/FileSystemWorker.ts";
 
 export const createWorker = (type: WorkerType) => {
   const worker = new MockWorker();
 
   switch (type) {
+    case "fileSystem": {
+      worker.port.addEventListener(
+        "message",
+        createMockWorkerMessageHandler(worker, (unknownAction) => {
+          const action = unknownAction as FileSystemAction;
+          switch (action.type) {
+            case "getAllProjects":
+              return new Map();
+          }
+        }),
+      );
+      break;
+    }
     case "copasi": {
       worker.port.addEventListener(
         "message",

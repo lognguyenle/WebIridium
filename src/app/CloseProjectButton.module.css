@@ -1,0 +1,12 @@
+.confirm {
+  composes: ghost from "@/components/Button.module.css";
+  display: flex;
+  flex-direction: row;
+  gap: var(--spacing-2);
+  color: var(--color-layer1-fg);
+  font-size: var(--font-size-medium) !important;
+}
+
+.check {
+  font-size: var(--font-size-medium);
+}

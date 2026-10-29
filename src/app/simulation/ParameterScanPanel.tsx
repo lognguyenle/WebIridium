@@ -30,12 +30,11 @@ import {
   runParameterScanAtom,
 } from "@/globals/simulation";
 import { modelStatusAtom, variablesAtom } from "@/globals/model";
+import { variableSettingssAtom } from "@/globals/model";
 import {
   parameterScanOptionsAtom,
-  variableSettingssAtom,
   type ParameterScanOptions,
 } from "@/globals/settings";
-import { isSliderSimulationQueuedAtom } from "@/globals/slider";
 import { simulatorAtom } from "@/globals/simulator";
 
 export interface ParameterScanPanelProps {
@@ -51,7 +50,6 @@ const ParameterScanPanel = ({ visible }: ParameterScanPanelProps) => {
     parameterScanOptionsAtom,
   );
   const isSimulating = useAtomValue(isSimulatingAtom);
-  const isSliderSimulationQueued = useAtomValue(isSliderSimulationQueuedAtom);
   const modelStatus = useAtomValue(modelStatusAtom);
   const simulator = useAtomValue(simulatorAtom);
   const runParameterScan = useSetAtom(runParameterScanAtom);
@@ -90,7 +88,7 @@ const ParameterScanPanel = ({ visible }: ParameterScanPanelProps) => {
       <CancellableButton
         icon={<PlayIcon />}
         disabled={modelStatus.type === "loading"}
-        isLoading={isSimulating || isSliderSimulationQueued}
+        isLoading={isSimulating}
         onClick={handleSimulateClick}
         canCancel={isSimulating}
         onCancel={handleCancelClick}

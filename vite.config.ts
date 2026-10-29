@@ -34,7 +34,16 @@ const includeGoatCounterPlugin: Plugin = {
 // https://vite.dev/config/
 export default defineConfig({
   base: "/WebIridium",
-  plugins: [react(), svgr(), nodePolyfills(), includeGoatCounterPlugin],
+  plugins: [
+    react({
+      babel: {
+        plugins: ["babel-plugin-react-compiler"],
+      },
+    }),
+    svgr(),
+    nodePolyfills(),
+    includeGoatCounterPlugin,
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"),
@@ -61,7 +70,7 @@ export default defineConfig({
           __dirname + "/node_modules/monaco-editor/esm/vs/editor/editor.api",
       },
     ],
-    setupFiles: ["./src/vitestSetup.ts"],
+    setupFiles: ["./src/vitestSetup.ts", "@vitest/web-worker"],
     environment: "jsdom",
     coverage: {
       include: ["src"],

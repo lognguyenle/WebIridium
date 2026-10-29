@@ -17,5 +17,8 @@
 
 .menubar-right {
   grid-column: 3;
-  padding-inline: var(--spacing-4);
+  width: 100%;
+  display: flex;
+  justify-content: end;
+  padding-inline: var(--spacing-5);
 }

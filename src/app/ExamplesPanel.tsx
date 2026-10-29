@@ -23,7 +23,6 @@ import { useToast } from "@/components/Toast";
 import { simulateTimeCourseAtom } from "@/globals/simulation";
 import {
   independentVariableAtom,
-  nameAtom,
   timeCourseParametersAtom,
 } from "@/globals/settings";
 
@@ -66,7 +65,6 @@ const ExamplesPanel = ({ visible }: ExamplesPanelProps) => {
   const setModel = useSetAtom(setModelAtom);
   const simulateTimeCourse = useSetAtom(simulateTimeCourseAtom);
   const setTimeCourseParameters = useSetAtom(timeCourseParametersAtom);
-  const setWorkspaceName = useSetAtom(nameAtom);
   const setIndependentVariable = useSetAtom(independentVariableAtom);
 
   const { toast } = useToast();
@@ -78,7 +76,6 @@ const ExamplesPanel = ({ visible }: ExamplesPanelProps) => {
     const wasModelSetSuccessful = await setModel({
       name: exampleFormattedNames[example],
       content: examples[example],
-      resetCurrentResult: false,
     });
 
     if (!wasModelSetSuccessful) {
@@ -99,7 +96,6 @@ const ExamplesPanel = ({ visible }: ExamplesPanelProps) => {
     } else {
       // apply preset
       const preset = examplePresets[example];
-      setWorkspaceName(exampleFormattedNames[example]);
       if (preset) {
         setTimeCourseParameters(preset.parameters);
         if (preset.independentVariable) {

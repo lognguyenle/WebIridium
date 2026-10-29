@@ -2,7 +2,7 @@
 
 import type { VariableSettings } from "@/globals/settings";
 import type { Variable } from "./simulation/Simulator";
-import type { SelectGroupedProps } from "@/components/input/Select";
+import type { SelectProps } from "@/components/input/Select";
 import { getVariableFullName } from "./simulation/variableNames";
 
 export const CATEGORY_ORDER = [
@@ -61,7 +61,7 @@ export const groupVariablesForSelectComponent = <TVar extends Variable>(
     variable: Variable,
     settings: VariableSettings,
   ) => string = getVariableFullName,
-): SelectGroupedProps["groups"] => {
+): SelectProps["groups"] => {
   return groupVariables(variables).reduce((acc, [category, variables]) => {
     return {
       ...acc,

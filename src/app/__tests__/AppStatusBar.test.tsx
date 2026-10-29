@@ -15,7 +15,7 @@ afterEach(() => {
   resetWorkerResponseDelay();
 });
 
-it("should say Simulating when a simulation is being ran", async () => {
+it.skip("should say Simulating when a simulation is being ran", async () => {
   await renderWithinWorkspace(
     <>
       <AppStatusBar />

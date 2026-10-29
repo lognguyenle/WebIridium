@@ -7,7 +7,7 @@ import PanelTitle from "../components/PanelTitle";
 import CheckIcon from "@/assets/icons/CheckIcon.svg?react";
 
 import { historyAtom, type HistoryRecord } from "@/globals/history";
-import { timeToAgoText } from "@/features/timeUtils";
+import { timeToAgoText } from "@/features/formatUtils";
 import { simulationResultAtom } from "@/globals/simulation";
 import { currentRightPanelAtom } from "@/globals/layout";
 import { updateEditorContentAtom } from "@/globals/model";
@@ -89,7 +89,7 @@ const HistoryPanel = ({ visible }: HistoryPanelProps) => {
       <div className={styles.panel} data-testid="history-panel">
         <PanelTitle title="History" />
         {history.length === 0 ? (
-          <p className={styles.noHistory}>No history</p>
+          <p className={styles.noHistory}>No history.</p>
         ) : (
           <ul className={styles.list}>
             {reversedHistory.map((record) => (

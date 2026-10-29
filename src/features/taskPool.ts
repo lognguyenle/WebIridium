@@ -12,26 +12,30 @@
  * When comments refer "task runner" it is either a web worker or web socket.
  */
 
-export type Action = {
+export type Action<
+  Name extends string = string,
+  Payload = unknown,
+  InternalState = unknown,
+> = {
   id: number;
-  type: string;
-  payload: unknown;
+  type: Name;
+  payload: Payload;
 
   /**
    * This value is synchronized with the actual task runner. It is only sent to
    * the runner when changed.
    * For simulationWorker, "internalState" is the antimony code.
    */
-  internalState: unknown;
+  internalState: InternalState;
 };
 
-export type Result = {
+export type Result<Data = unknown> = {
   /**
    * This should be the same as the id of the action that
    * triggered this result.
    */
   id: number;
-  data: unknown;
+  data: Data;
 };
 
 export type ErrorResult = {
@@ -39,12 +43,12 @@ export type ErrorResult = {
   errorMessage: string;
 };
 
-type Task<RunnerInfo> = {
+type Task<RunnerInfo, Payload = unknown, InternalState = unknown> = {
   id: number;
   state: "waiting" | "working" | "done" | "terminated" | "failed";
   actionType: string;
-  payload: unknown;
-  internalState: unknown;
+  payload: Payload;
+  internalState: InternalState;
   resolve: (res: unknown) => void;
   reject: (reason: unknown) => void;
   /**
@@ -61,8 +65,23 @@ type WorkerInfo = {
   internalState: unknown;
 };
 
-export type WorkerPoolOptions = {
+export type TaskPoolOptions = {
+  /**
+   * Whether results should be returned in their respective actions were sent.
+   * This may cause blocking if an earlier result is taking too long.
+   *
+   * Default: false
+   */
+  hasOrderedResults?: boolean;
+};
+
+export type WorkerPoolOptions = TaskPoolOptions & {
   maxWorkers?: number;
+};
+
+type TerminatedResult = {
+  id: number;
+  isTerminated: true;
 };
 
 /**
@@ -72,10 +91,17 @@ export type WorkerPoolOptions = {
  */
 export abstract class TaskPool<RunnerInfo> {
   #tasks: Task<RunnerInfo>[];
-  #idCounter: number = 0;
 
-  constructor() {
+  /** Monotonically increasing. */
+  #idCounter: number = 0;
+  #lastEvaluatedId: number = -1;
+  #resultQueue: (Result | ErrorResult | TerminatedResult)[];
+  readonly hasOrderedResults: boolean;
+
+  constructor({ hasOrderedResults = false }: TaskPoolOptions) {
     this.#tasks = [];
+    this.hasOrderedResults = hasOrderedResults;
+    this.#resultQueue = [];
   }
 
   /**
@@ -86,12 +112,15 @@ export abstract class TaskPool<RunnerInfo> {
    *                        This data is only sent if it has changed since the
    *                        last run.
    */
-  runTask(
-    type: string,
-    payload: unknown,
-    internalState: unknown,
+  runTask<
+    T extends Action = Action<string, unknown, unknown>,
+    U extends Result = Result<unknown>,
+  >(
+    type: T["type"],
+    payload: T["payload"],
+    internalState: T["internalState"],
     abortSignal?: AbortSignal,
-  ): Promise<unknown> {
+  ): Promise<U["data"]> {
     const id = this.#idCounter++;
     return new Promise((resolve, reject) => {
       const task: Task<RunnerInfo> = {
@@ -152,19 +181,56 @@ export abstract class TaskPool<RunnerInfo> {
    */
   abstract _delegateTask(task: Task<RunnerInfo>, runnerInfo: RunnerInfo): void;
 
-  _resolveResult(result: Result | ErrorResult): void {
-    const taskIndex = this.#tasks.findIndex((t) => t.id === result.id);
-    if (taskIndex >= 0) {
-      const task = this.#tasks[taskIndex];
-      this.#tasks.splice(taskIndex, 1);
-      if ("errorMessage" in result) {
-        task.state = "failed";
-        task.runnerInfo = undefined;
-        task.reject(new Error(result.errorMessage));
+  /**
+   * Make sure to call #evaluateQueue after this! It will clear any blocks
+   * if they exist.
+   */
+  #insertQueue(result: Result | ErrorResult | TerminatedResult): void {
+    if (this.hasOrderedResults) {
+      const insertAt = this.#resultQueue.findIndex((r) => r.id > result.id);
+      if (insertAt === -1) {
+        this.#resultQueue.push(result);
       } else {
-        task.state = "done";
-        task.runnerInfo = undefined;
-        task.resolve(result.data);
+        this.#resultQueue.splice(insertAt, 0, result);
+      }
+    } else {
+      this.#resultQueue.push(result);
+    }
+  }
+
+  _resolveResult(result: Result | ErrorResult): void {
+    this.#insertQueue(result);
+    this.#evaluateQueue();
+  }
+
+  #evaluateQueue(): void {
+    while (this.#resultQueue.length > 0) {
+      const result = this.#resultQueue[0];
+      if (this.hasOrderedResults && result.id !== this.#lastEvaluatedId + 1) {
+        break;
+      }
+
+      this.#resultQueue.shift();
+      this.#lastEvaluatedId = result.id;
+
+      // TerminatedResults are already evaluated when they got terminated.
+      if ("isTerminated" in result) {
+        continue;
+      }
+
+      const taskIndex = this.#tasks.findIndex((t) => t.id === result.id);
+      if (taskIndex >= 0) {
+        const task = this.#tasks[taskIndex];
+        this.#tasks.splice(taskIndex, 1);
+        if ("errorMessage" in result) {
+          task.state = "failed";
+          task.runnerInfo = undefined;
+          task.reject(new Error(result.errorMessage));
+        } else {
+          task.state = "done";
+          task.runnerInfo = undefined;
+          task.resolve(result.data);
+        }
       }
     }
   }
@@ -179,6 +245,13 @@ export abstract class TaskPool<RunnerInfo> {
       if (task.runnerInfo) {
         this._stopTask(task, task.runnerInfo);
       }
+
+      // need to populate the queue so it doesn't block everything else
+      this.#insertQueue({
+        id: task.id,
+        isTerminated: true,
+      });
+      this.#evaluateQueue();
     }
   }
 
@@ -204,11 +277,9 @@ export class WorkerPool extends TaskPool<WorkerInfo> {
   #createWorker: () => Worker;
   #workers: WorkerInfo[];
 
-  constructor(
-    createWorker: () => Worker,
-    { maxWorkers = 3 }: WorkerPoolOptions = {},
-  ) {
-    super();
+  constructor(createWorker: () => Worker, options: WorkerPoolOptions = {}) {
+    super(options);
+    const { maxWorkers = 3 } = options;
     this.maxWorkers = maxWorkers;
 
     this.#createWorker = createWorker;
@@ -284,8 +355,8 @@ type SocketInfo = {
 export class SocketTaskPool extends TaskPool<SocketInfo> {
   #socketInfo: SocketInfo | null;
 
-  constructor() {
-    super();
+  constructor(options: TaskPoolOptions = {}) {
+    super(options);
     this.#socketInfo = null;
   }
 

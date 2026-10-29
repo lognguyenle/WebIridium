@@ -30,6 +30,7 @@ export class LibSbmlSimSimulator extends Simulator {
     super();
     this.#workerPool = new WorkerPool(() => createWorker("libsbmlsim"), {
       maxWorkers: 4,
+      hasOrderedResults: true,
     });
   }
 
@@ -59,7 +60,6 @@ export class LibSbmlSimSimulator extends Simulator {
     return {
       type: "timeCourse",
       columns: result.columns,
-      columnSet: new Set(result.columns.map((col) => col.title)),
     };
   }
 

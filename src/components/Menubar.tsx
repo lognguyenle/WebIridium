@@ -48,12 +48,18 @@ export const MenubarMenu = ({
 export const MenubarItem = ({
   name,
   onSelect,
+  disabled,
 }: {
   name: string;
   onSelect: () => void;
+  disabled?: boolean;
 }) => {
   return (
-    <RadixMenubar.Item className={styles.item} onSelect={onSelect}>
+    <RadixMenubar.Item
+      className={styles.item}
+      onSelect={onSelect}
+      disabled={disabled}
+    >
       {name}
     </RadixMenubar.Item>
   );
@@ -97,13 +103,19 @@ export const MenubarRadioGroup = ({
 
 export const MenubarRadioItem = ({
   value,
+  disabled,
   children,
 }: {
   value: string | null;
+  disabled?: boolean;
   children: React.ReactNode;
 }) => {
   return (
-    <RadixMenubar.RadioItem className={styles.item} value={value!}>
+    <RadixMenubar.RadioItem
+      className={styles.item}
+      value={value!}
+      disabled={disabled}
+    >
       <RadixMenubar.ItemIndicator className={styles.itemIndicator}>
         <DotFilledIcon />
       </RadixMenubar.ItemIndicator>
@@ -115,10 +127,12 @@ export const MenubarRadioItem = ({
 export const MenubarCheckboxItem = ({
   checked,
   onCheckedChange,
+  disabled,
   children,
 }: {
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
+  disabled?: boolean;
   children: React.ReactNode;
 }) => {
   return (
@@ -126,6 +140,7 @@ export const MenubarCheckboxItem = ({
       className={styles.item}
       checked={checked}
       onCheckedChange={onCheckedChange}
+      disabled={disabled}
     >
       <RadixMenubar.ItemIndicator className={styles.itemIndicator}>
         <CheckIcon />

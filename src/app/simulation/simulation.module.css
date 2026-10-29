@@ -11,7 +11,7 @@
 }
 
 .sliders-button {
-  color: var(--color-ghost-text-button);
+  color: var(--color-ghost-button-fg);
   line-height: 0;
   background-color: var(--color-ghost-button-bg);
   border: none;
@@ -22,12 +22,10 @@
   cursor: pointer;
 
   &:hover {
-    color: var(--color-ghost-text-button-hover);
     background-color: var(--color-ghost-button-hover-bg);
   }
 
   &:active {
-    color: var(--color-ghost-text-button-active);
     background-color: var(--color-ghost-button-active-bg);
   }
 

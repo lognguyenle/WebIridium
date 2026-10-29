@@ -16,6 +16,8 @@ import SteadyState3DPanel from "./SteadyState3DPanel";
 
 import DownloadPlotButton from "./downloadButtons/DownloadPlotButton";
 import DownloadTableButton from "./downloadButtons/DownloadTableButton";
+import DownloadPlot3DButton from "./downloadButtons/DownloadPlot3DButton";
+import DownloadSteadyState3DButton from "./downloadButtons/DownloadSteadyState3DButton";
 
 import { simulationResultAtom } from "@/globals/simulation";
 import IconButton from "@/components/IconButton";
@@ -50,6 +52,7 @@ const ResultTabbedPanel = ({ onClose }: ResultTabbedPanelProps) => {
             <IconButton label="Close" onClick={onClose}>
               <CrossIcon width="1em" height="1em" />
             </IconButton>
+            <DownloadSteadyState3DButton />
           </>
         ),
       },
@@ -91,6 +94,7 @@ const ResultTabbedPanel = ({ onClose }: ResultTabbedPanelProps) => {
             <IconButton label="Close" onClick={onClose}>
               <CrossIcon width="1em" height="1em" />
             </IconButton>
+            <DownloadPlot3DButton />
           </>
         ),
       },

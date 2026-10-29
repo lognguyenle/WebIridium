@@ -1,0 +1,50 @@
+:root[data-theme="Light"] {
+  color-scheme: light;
+
+  --opacity-translucent: 10%;
+  --opacity-dim: 60%;
+  --opacity-very-dim: 40%;
+
+  /* Interactions/Prominent Elements */
+
+  --color-disabled: oklch(0.8 0 0);
+  --color-disabled-fg: oklch(0.6 0 0);
+
+  --color-button-bg: oklch(0.9261 0 0);
+  --color-button-fg: oklch(0.1344 0 0);
+  --color-button-border: oklch(0.7508 0 0);
+
+  --color-card-bg: var(--color-button-bg);
+  --color-card-fg: var(--color-button-fg);
+  --color-card-border: var(--color-button-border);
+
+  --color-input-bg: oklch(0.9641 0 0);
+  --color-input-fg: var(--color-layer2-fg);
+  --color-input-border: oklch(0.7508 0 0);
+
+  /* Layers/Background Elements */
+
+  --color-layer1-bg: oklch(0.9761 0 0);
+  --color-layer1-fg: oklch(0.1344 0 0);
+  --color-layer1-border: oklch(0.8607 0 0);
+
+  --color-layer2-bg: oklch(0.948 0 0);
+  --color-layer2-fg: oklch(0.1344 0 0);
+  --color-layer2-border: oklch(0.8252 0 0);
+
+  --color-layer3-bg: oklch(0.9751 0 0);
+  --color-layer3-fg: oklch(0.1344 0 0);
+  --color-layer3-border: oklch(0.7968 0 0);
+
+  --color-container-bg: var(--color-input-bg);
+  --color-container-fg: var(--color-input-fg);
+  --color-container-border: var(--color-input-border);
+
+  /* Specific-use Colors */
+
+  --color-error: oklch(0.5123 0.1923 29.55);
+  --color-success: oklch(0.6497 0.1759 149.2);
+  --color-success-fg: oklch(1 0 0);
+  --color-warning: oklch(0.6975 0.1409 97.4);
+  --color-info: oklch(0.6356 0.1206 228.11);
+}

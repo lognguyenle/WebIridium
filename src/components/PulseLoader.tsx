@@ -15,6 +15,7 @@ export interface PulseLoaderProps {
   /** Spacing as CSS value. */
   spacing?: string;
   cssOverride?: CSSProperties;
+  [prop: string]: unknown;
 }
 
 const PulseLoader = memo(

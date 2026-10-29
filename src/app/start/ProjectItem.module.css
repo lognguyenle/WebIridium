@@ -1,0 +1,123 @@
+.item {
+  display: flex;
+  flex-direction: row;
+
+  background: var(--color-card-bg);
+  border: var(--border-card);
+  border-radius: var(--border-radius);
+
+  &:has(.main:hover) {
+    background-color: var(--color-card-bg-hover);
+  }
+
+  &:has(.main:active) {
+    background-color: var(--color-card-bg-active);
+  }
+
+  &:has(.main:disabled) {
+    background-color: var(--color-card-bg-disabled);
+  }
+}
+
+.main {
+  cursor: pointer;
+  text-align: left;
+  flex-grow: 1;
+  background: none;
+  border: none;
+  padding: var(--spacing-4);
+  overflow: hidden;
+
+  display: flex;
+  flex-direction: row;
+  gap: var(--spacing-4);
+
+  &:focus-visible {
+    outline: var(--outline-focused);
+  }
+
+  &:disabled *:not(.icon-text) {
+    color: var(--color-card-fg-very-dim);
+  }
+}
+
+.icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background: var(--gradient-pink);
+  height: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: 2px;
+}
+
+.icon-text {
+  color: #eee;
+  font-size: var(--font-size-big);
+}
+
+.details {
+  flex-grow: 1;
+  min-width: 0; /* makes the ellipsis work... I don't know why */
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.name {
+  color: var(--color-card-fg);
+  font-weight: 500;
+  margin: 0;
+  font-size: var(--font-size-medium);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.date {
+  color: var(--color-card-fg-dim);
+  font-size: var(--font-size-medium);
+}
+
+.more-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-2);
+  padding-right: var(--spacing-4);
+}
+
+.more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: none;
+  padding: var(--spacing-2) 0;
+  color: var(--color-ghost-button-fg);
+  background-color: var(--color-ghost-button-bg);
+  border-radius: var(--border-radius);
+
+  &:focus-visible {
+    outline: var(--outline-focused);
+  }
+
+  &:hover {
+    background-color: var(--color-ghost-button-hover-bg);
+  }
+  &:active {
+    background-color: var(--color-ghost-button-active-bg);
+  }
+}
+
+.more-icon {
+  width: var(--size-3);
+  height: var(--size-3);
+}
+
+.loader {
+  color: var(--color-card-fg-dim);
+  padding-inline: var(--spacing-4);
+}

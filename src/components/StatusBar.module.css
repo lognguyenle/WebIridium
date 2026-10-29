@@ -12,6 +12,8 @@
   font-size: var(--font-size-small);
   border-bottom: var(--border-layer1);
   border-top: var(--border-layer1);
+  padding-inline-end: var(--spacing-4);
+  height: 24px;
 }
 
 .item {
@@ -20,4 +22,8 @@
   padding: var(--spacing-2) var(--spacing-3);
   gap: var(--spacing-2);
   align-items: center;
+}
+
+.end {
+  margin-left: auto;
 }

@@ -20,3 +20,7 @@
 .warning-icon {
   color: var(--color-warning);
 }
+
+.saving-item {
+  color: var(--color-layer1-fg-dim);
+}

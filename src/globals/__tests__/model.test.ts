@@ -62,7 +62,7 @@ describe("patchVariableSettings", () => {
   ];
 
   it("should add new variables", () => {
-    const result = patchVariablesSettings([], {}, variables);
+    const result = patchVariablesSettings([], {}, variables, false);
 
     expect(result).toMatchObject(
       Object.fromEntries(
@@ -79,23 +79,29 @@ describe("patchVariableSettings", () => {
       variables,
       variableSettingss,
       variables,
+      false,
     );
 
     expect(result).toEqual(variableSettingss);
   });
 
   it("should add new variables", () => {
-    const result = patchVariablesSettings(variables, variableSettingss, [
-      ...variables,
-      {
-        type: "settable",
-        category: "Boundary Species",
-        defaultDisplayName: "test4",
-        defaultValue: 1,
-        name: "test4",
-        setName: "test4",
-      },
-    ]);
+    const result = patchVariablesSettings(
+      variables,
+      variableSettingss,
+      [
+        ...variables,
+        {
+          type: "settable",
+          category: "Boundary Species",
+          defaultDisplayName: "test4",
+          defaultValue: 1,
+          name: "test4",
+          setName: "test4",
+        },
+      ],
+      false,
+    );
 
     expect(result).toMatchObject({
       ...variableSettingss,
@@ -117,6 +123,7 @@ describe("patchVariableSettings", () => {
             }
           : v,
       ),
+      false,
     );
 
     expect(result["test3"]).not.toStrictEqual(v3);
@@ -134,6 +141,7 @@ describe("patchVariableSettings", () => {
             }
           : v,
       ),
+      false,
     );
 
     expect(result).toMatchObject({
@@ -142,5 +150,16 @@ describe("patchVariableSettings", () => {
         displayName: "different",
       },
     });
+  });
+
+  it("should preserve variables settings when told to", () => {
+    const result = patchVariablesSettings(
+      [],
+      variableSettingss,
+      variables,
+      true,
+    );
+
+    expect(result).toEqual(variableSettingss);
   });
 });

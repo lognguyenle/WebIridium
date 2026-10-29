@@ -1,0 +1,53 @@
+:root[data-theme="Catpuccin"] {
+  color-scheme: dark;
+
+  --opacity-translucent: 10%;
+  --opacity-dim: 50%;
+  --opacity-very-dim: 35%;
+
+  --color-accent: #b4befe;
+  --color-accent-fg: #181825;
+
+  /* Interactions/Prominent Elements */
+
+  --color-disabled: #2c2d41;
+  --color-disabled-fg: #686976;
+
+  --color-button-bg: oklch(0.32 0.0518 276.84);
+  --color-button-fg: #cdd6f4;
+  --color-button-border: oklch(0.34 0.0518 276.84);
+
+  --color-card-bg: transparent;
+  --color-card-fg: #cdd6f4;
+  --color-card-border: oklch(0.38 0.0518 276.84);
+
+  --color-input-bg: #3b3c56;
+  --color-input-fg: #cdd6f4;
+  --color-input-border: #3b3c56;
+
+  /* Layers/Background Elements */
+
+  --color-layer1-bg: #1e1e2e;
+  --color-layer1-fg: #cdd6f4;
+  --color-layer1-border: #313244;
+
+  --color-layer2-bg: #2a2b3d;
+  --color-layer2-fg: #cdd6f4;
+  --color-layer2-border: #2a2b3d;
+
+  --color-layer3-bg: oklch(0.3631 0.0321 279.5);
+  --color-layer3-fg: #cdd6f4;
+  --color-layer3-border: oklch(0.3631 0.0321 279.5);
+
+  --color-container-bg: var(--color-layer2-bg);
+  --color-container-fg: var(--color-layer2-fg);
+  --color-container-border: var(--color-layer2-border);
+
+  /* Specific-use Colors */
+
+  --color-error: #f38ba8;
+  --color-success: #a6e3a1;
+  --color-success-fg: #181825;
+  --color-warning: #f9e2af;
+  --color-info: #89b4fa;
+}

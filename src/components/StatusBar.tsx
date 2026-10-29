@@ -12,8 +12,17 @@ export const StatusBar = ({ children }: StatusBarProps) => {
 export interface StatusBarItemProps {
   children: React.ReactNode;
   className?: string;
+  align?: "start" | "end";
 }
 
-export const StatusBarItem = ({ children, className }: StatusBarItemProps) => {
-  return <div className={clsx(styles.item, className)}>{children}</div>;
+export const StatusBarItem = ({
+  children,
+  className,
+  align = "start",
+}: StatusBarItemProps) => {
+  return (
+    <div className={clsx(styles.item, styles[align], className)}>
+      {children}
+    </div>
+  );
 };

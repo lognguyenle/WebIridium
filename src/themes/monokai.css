@@ -1,0 +1,53 @@
+:root[data-theme="Monokai"] {
+  color-scheme: dark;
+
+  --opacity-translucent: 10%;
+  --opacity-dim: 62.35%;
+  --opacity-very-dim: 47%;
+
+  --color-accent: oklch(0.5 0.0288 97.39);
+  --color-accent-fg: #fff;
+
+  /* Interactions/Prominent Elements */
+
+  --color-disabled: oklch(0.2874 0.0288 97.39);
+  --color-disabled-fg: oklch(0.3853 0.0123 97.39);
+
+  --color-button-bg: oklch(0.4 0.0288 97.39);
+  --color-button-fg: var(--color-layer1-fg);
+  --color-button-border: oklch(0.1941 0.0395 97.39);
+
+  --color-card-bg: oklch(0.32 0.0238 97.39);
+  --color-card-fg: var(--color-layer1-fg);
+  --color-card-border: oklch(0.1941 0.0395 97.39);
+
+  --color-input-bg: oklch(0.35 0.0168 110);
+  --color-input-fg: var(--color-layer1-fg);
+  --color-input-border: oklch(0.1 0.0168 116.39);
+
+  /* Layers/Background Elements */
+
+  --color-layer1-bg: oklch(0.25 0.0109 114.8);
+  --color-layer1-fg: oklch(0.9775 0.0079 106.55);
+  --color-layer1-border: oklch(0.1 0.0058 121.89);
+
+  --color-layer2-bg: oklch(0.3037 0.0109 114.8);
+  --color-layer2-fg: var(--color-layer1-fg);
+  --color-layer2-border: oklch(0.1 0.0152 280.63);
+
+  --color-layer3-bg: oklch(0.3115 0.0109 114.8);
+  --color-layer3-fg: var(--color-layer1-fg);
+  --color-layer3-border: oklch(0.1 0.0152 280.63);
+
+  --color-container-bg: var(--color-layer2-bg);
+  --color-container-fg: var(--color-layer2-fg);
+  --color-container-border: var(--color-layer2-border);
+
+  /* Specific-use Colors */
+
+  --color-error: oklch(0.4471 0.142 4.86);
+  --color-success: oklch(0.7118 0.167 126.9);
+  --color-success-fg: oklch(0.01 0 126.9);
+  --color-warning: oklch(0.7458 0.1499 109.98);
+  --color-info: oklch(0.6097 0.115 271.2);
+}

@@ -8,12 +8,16 @@ import CheckIcon from "@/assets/icons/CheckIcon.svg?react";
 import CrossIcon from "@/assets/icons/CrossIcon.svg?react";
 import WarningIcon from "@/assets/icons/WarningIcon.svg?react";
 
-import { variablesAtom, modelStatusAtom } from "@/globals/model";
 import {
-  independentVariableAtom,
+  variablesAtom,
   variableSettingssAtom,
-} from "@/globals/settings";
+  modelStatusAtom,
+} from "@/globals/model";
+import { independentVariableAtom } from "@/globals/settings";
 import { isSimulatingAtom, simulationResultAtom } from "@/globals/simulation";
+import { hasActiveProjectAtom } from "@/globals/project";
+import { isSavingAtom } from "@/globals/saving";
+import { useEffect, useState } from "react";
 
 const ModelStatusItem = () => {
   const status = useAtomValue(modelStatusAtom);
@@ -117,11 +121,38 @@ const MissingDataStatusItem = () => {
   }
 };
 
+const MAX_DOTS = 3;
+const SavingStatusItem = () => {
+  const isSaving = useAtomValue(isSavingAtom);
+  const [dots, setDots] = useState(0);
+
+  useEffect(() => {
+    if (isSaving) {
+      const id = setInterval(() => {
+        setDots((old) => (old % MAX_DOTS) + 1);
+      }, 500);
+      return () => clearInterval(id);
+    }
+  }, [isSaving]);
+
+  if (isSaving) {
+    return (
+      <StatusBarItem className={styles.savingItem} align="end">
+        Saving{".".repeat(dots)}
+      </StatusBarItem>
+    );
+  } else {
+    return null;
+  }
+};
+
 const AppStatusBar = () => {
+  const hasActiveProject = useAtomValue(hasActiveProjectAtom);
   return (
     <StatusBar>
-      <ModelStatusItem />
+      {hasActiveProject && <ModelStatusItem />}
       <MissingDataStatusItem />
+      <SavingStatusItem />
     </StatusBar>
   );
 };

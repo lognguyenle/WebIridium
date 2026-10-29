@@ -16,9 +16,10 @@ import { DASH_ARRAYS } from "@/features/lineStyle";
 
 import type { SimulationResult } from "@/features/simulation/Simulator";
 import {
-  independentVariableAtom,
+  getVariableSettingsFrom,
   variableSettingssAtom,
-} from "@/globals/settings";
+} from "@/globals/model";
+import { independentVariableAtom } from "@/globals/settings";
 import { useScanIndependentVariable } from "@/features/simulation/useScanIndependentVariable";
 
 // if it's too much, the labels get crowded
@@ -77,7 +78,7 @@ const SeriesLineChart3D = ({ result }: SeriesLineChart3DProps) => {
     );
     const parameterSettings =
       result.type === "parameterScan"
-        ? variableSettingss[result.parameter]
+        ? getVariableSettingsFrom(variableSettingss, result.parameter)
         : null;
     if (!independentVariableColumn) return;
 
@@ -92,7 +93,7 @@ const SeriesLineChart3D = ({ result }: SeriesLineChart3DProps) => {
     } of columns) {
       if (variableName === independentVariableName) continue;
 
-      const settings = variableSettingss[variableName];
+      const settings = getVariableSettingsFrom(variableSettingss, variableName);
       if (!settings.visible) continue;
       let finalColor: string = settings.color;
       if (result.type === "parameterScan" && result.mode === "timeCourse") {

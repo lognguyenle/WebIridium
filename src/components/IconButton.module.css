@@ -5,6 +5,7 @@
 
 .normal {
   font-size: 1.25em;
+  padding: var(--spacing-1);
 }
 
 .smalll {

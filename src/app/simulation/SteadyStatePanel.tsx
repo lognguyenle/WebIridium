@@ -11,7 +11,6 @@ import {
   isSimulatingAtom,
 } from "@/globals/simulation";
 import { modelStatusAtom } from "@/globals/model";
-import { isSliderSimulationQueuedAtom } from "@/globals/slider";
 
 export interface SteadyStatePanelProps {
   visible: boolean;
@@ -20,7 +19,6 @@ export interface SteadyStatePanelProps {
 export const SteadyStatePanel = ({ visible }: SteadyStatePanelProps) => {
   const { toast } = useToast();
   const isSimulating = useAtomValue(isSimulatingAtom);
-  const isSliderSimulationQueued = useAtomValue(isSliderSimulationQueuedAtom);
   const modelStatus = useAtomValue(modelStatusAtom);
   const computeSteadyState = useSetAtom(computeSteadyStateAtom);
   const cancelSimulation = useSetAtom(cancelSimulationAtom);
@@ -49,7 +47,7 @@ export const SteadyStatePanel = ({ visible }: SteadyStatePanelProps) => {
       <CancellableButton
         icon={<PlayIcon />}
         disabled={modelStatus.type === "loading"}
-        isLoading={isSimulating || isSliderSimulationQueued}
+        isLoading={isSimulating}
         onClick={handleSimulateClick}
         canCancel={isSimulating}
         onCancel={handleCancelClick}

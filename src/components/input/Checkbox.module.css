@@ -36,6 +36,7 @@
   margin: 0;
 
   &[data-disabled] {
+    color: var(--color-disabled-fg);
     background-color: var(--color-disabled);
   }
 }

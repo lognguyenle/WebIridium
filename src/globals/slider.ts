@@ -15,22 +15,14 @@ export interface VariableSliderState {
   max: number;
 }
 
-const _queuedSliderSimulationIdAtom = atom<number | null>(null);
-
 export const variableSliderStatesAtom = atom<
   Record<string, VariableSliderState>
 >({});
-
-export const isSliderSimulationQueuedAtom = atom(
-  (get) => get(_queuedSliderSimulationIdAtom) !== null,
-);
 
 export type UpdateVariableSliderValueOptions = {
   variableName: string;
   value: number;
 };
-
-const SLIDER_CHANGE_DEBOUNCE_TIME = 25;
 
 export const getInitialSliderState = (
   variable: SettableVariable,
@@ -66,43 +58,23 @@ const _setSlidersAndSimulateAtom = atom(
     set,
     {
       sliderStates,
-      skipDebounce = false,
     }: {
       sliderStates: Record<string, VariableSliderState>;
-      skipDebounce?: boolean;
     },
   ) => {
     set(variableSliderStatesAtom, sliderStates);
 
-    let timeoutId: number | null = null;
-    const simulate = async () => {
-      if (get(_queuedSliderSimulationIdAtom) === timeoutId) {
-        set(_queuedSliderSimulationIdAtom, null);
-      }
-
-      switch (get(simulationResultAtom)?.type) {
-        case "steadyState":
-          await set(computeSteadyStateAtom, { delayEnd: true });
-          break;
-        case "parameterScan":
-          await set(runParameterScanAtom, { delayEnd: true });
-          break;
-        case "timeCourse":
-        default:
-          await set(simulateTimeCourseAtom, { delayEnd: true });
-          break;
-      }
-    };
-
-    if (skipDebounce) {
-      void simulate();
-    } else if (!get(_queuedSliderSimulationIdAtom)) {
-      timeoutId = setTimeout(
-        simulate,
-        SLIDER_CHANGE_DEBOUNCE_TIME,
-      ) as unknown as number;
-
-      set(_queuedSliderSimulationIdAtom, timeoutId);
+    switch (get(simulationResultAtom)?.type) {
+      case "steadyState":
+        void set(computeSteadyStateAtom, { delayEnd: true });
+        break;
+      case "parameterScan":
+        void set(runParameterScanAtom, { delayEnd: true });
+        break;
+      case "timeCourse":
+      default:
+        void set(simulateTimeCourseAtom, { delayEnd: true });
+        break;
     }
   },
 );
@@ -119,7 +91,6 @@ export const updateSliderAndSimulateAtom = atom(
           value,
         },
       },
-      skipDebounce: false,
     });
   },
 );
@@ -142,7 +113,6 @@ export const loadPresetAndSimulateAtom = atom(
 
     set(_setSlidersAndSimulateAtom, {
       sliderStates: newSliderStates,
-      skipDebounce: true,
     });
   },
 );

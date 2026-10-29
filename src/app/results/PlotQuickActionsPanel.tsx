@@ -1,4 +1,4 @@
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import clsx from "clsx";
 
 import styles from "./results.module.css";
@@ -12,11 +12,16 @@ import CrossIcon from "@/assets/icons/CrossIcon.svg?react";
 import PencilIcon from "@/assets/icons/PencilIcon.svg?react";
 import LayersIcon from "@/assets/icons/LayersIcon.svg?react";
 
-import { graphSettingsAtom, type GraphSettings } from "@/globals/settings";
+import {
+  graphSettingsAtom,
+  updateGraphSettingsAtom,
+} from "@/globals/graphPresets";
+import { type GraphSettings } from "@/features/savedData";
 import { currentVeryRightPanelAtom } from "@/globals/layout";
 
 const PlotQuickActionsPanel = () => {
-  const [graphSettings, setGraphSettings] = useAtom(graphSettingsAtom);
+  const graphSettings = useAtomValue(graphSettingsAtom);
+  const updateGraphSettings = useSetAtom(updateGraphSettingsAtom);
 
   const [currentVeryRightPanel, setCurrentVeryRightPanel] = useAtom(
     currentVeryRightPanelAtom,
@@ -29,7 +34,7 @@ const PlotQuickActionsPanel = () => {
     setting: keyof GraphSettings,
   ): ((newValue: unknown) => void) => {
     return (newValue) => {
-      setGraphSettings({ ...graphSettings, [setting]: newValue });
+      updateGraphSettings({ ...graphSettings, [setting]: newValue });
     };
   };
 

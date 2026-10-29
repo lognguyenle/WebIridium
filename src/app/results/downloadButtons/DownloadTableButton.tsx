@@ -5,22 +5,20 @@ import DownloadIcon from "@/assets/icons/DownloadIcon.svg?react";
 import IconButton from "@/components/IconButton";
 
 import { simulationResultAtom } from "@/globals/simulation";
-import {
-  variableSettingssAtom,
-  independentVariableAtom,
-  nameAtom,
-} from "@/globals/settings";
+import { variableSettingssAtom } from "@/globals/model";
+import { independentVariableAtom } from "@/globals/settings";
+import { metadataAtom } from "@/globals/project";
 import { useScanIndependentVariable } from "@/features/simulation/useScanIndependentVariable";
 import { generateTableParameters } from "../generateTableParameters";
 import { promptDownloadString } from "@/features/download";
-import { escapeCsvCell } from "@/features/csv";
+import { convertColumnsToCsv } from "@/features/csv";
 
 const DownloadTableButton = () => {
   const result = useAtomValue(simulationResultAtom);
   const variableSettingss = useAtomValue(variableSettingssAtom);
   const scanIndependentVariable = useScanIndependentVariable();
   const timeCourseIndependentVariable = useAtomValue(independentVariableAtom);
-  const workspaceName = useAtomValue(nameAtom);
+  const metadata = useAtomValue(metadataAtom);
 
   const handleClick = () => {
     if (!result) return;
@@ -32,28 +30,9 @@ const DownloadTableButton = () => {
       scanIndependentVariable,
     );
 
-    // TODO: unit test the csv output
-    const lines = [];
-    const firstColumn = columns[0];
-    if (!firstColumn) return;
+    const csv = convertColumnsToCsv(columns);
 
-    const line = [];
-    for (const { title } of columns) {
-      line.push(escapeCsvCell(title));
-    }
-    lines.push(line.join(","));
-
-    for (let i = 0; i < firstColumn.values.length; i++) {
-      const line = [];
-      for (const { values } of columns) {
-        line.push(values[i]);
-      }
-      lines.push(line.join(","));
-    }
-
-    const csv = lines.join("\n");
-
-    promptDownloadString(`Table of ${workspaceName}`, csv, "text/csv");
+    promptDownloadString(`Table of ${metadata.name}`, csv, "text/csv");
   };
 
   return (

@@ -1,6 +1,6 @@
 import { useRef, useState, type CSSProperties } from "react";
 import styles from "./FloatingLegend.module.css";
-import type { LegendSettings } from "@/globals/settings";
+import type { GraphSettings } from "@/features/savedData";
 import { type LineStyle, DASH_ARRAYS } from "@/features/lineStyle";
 
 export interface LegendDataItem {
@@ -10,7 +10,7 @@ export interface LegendDataItem {
 }
 
 export interface FloatingLegendProps {
-  settings: LegendSettings;
+  settings: GraphSettings["legend"];
   data: LegendDataItem[];
 }
 
@@ -18,7 +18,7 @@ const LegendItem = ({
   settings,
   data,
 }: {
-  settings: LegendSettings;
+  settings: GraphSettings["legend"];
   data: LegendDataItem;
 }) => {
   return (

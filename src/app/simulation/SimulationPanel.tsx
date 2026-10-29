@@ -1,4 +1,4 @@
-import { useAtom } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 
 import styles from "./simulation.module.css";
 
@@ -7,6 +7,8 @@ import SlidersIcon from "@/assets/icons/SlidersIcon.svg?react";
 
 import { currentBottomPanelAtom } from "@/globals/layout";
 import { Tooltip } from "@/components/Tooltip";
+import { hasActiveProjectAtom } from "@/globals/project";
+import NoActiveProjectPanel from "../NoActiveProjectPanel";
 
 export interface SimulationPanelProps {
   title: string;
@@ -26,6 +28,7 @@ const SimulationPanel = ({
   const [currentBottomPanel, setCurrentBottomPanel] = useAtom(
     currentBottomPanelAtom,
   );
+  const hasActiveProject = useAtomValue(hasActiveProjectAtom);
 
   const toggleSliders = () => {
     if (currentBottomPanel === "Sliders") {
@@ -37,6 +40,8 @@ const SimulationPanel = ({
 
   if (!visible) {
     return null;
+  } else if (!hasActiveProject) {
+    return <NoActiveProjectPanel />;
   } else {
     return (
       <div data-testid={testId} className={styles.simulationPanel}>

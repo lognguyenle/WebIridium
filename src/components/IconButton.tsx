@@ -27,11 +27,7 @@ const IconButton = ({
   return (
     <Tooltip text={label}>
       <button
-        className={clsx(
-          buttonStyles.ghostText,
-          styles.iconButton,
-          styles[size],
-        )}
+        className={clsx(buttonStyles.ghost, styles.iconButton, styles[size])}
         onClick={onClick}
         disabled={disabled}
         aria-label={label}

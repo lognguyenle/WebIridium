@@ -1,11 +1,18 @@
-@import "@/light.css";
-@import "@/dark.css";
-@import "@/monokai.css";
+@layer base;
 
+@import "@/themes/light.css";
+@import "@/themes/dark.css";
+@import "@/themes/verydark.css";
+@import "@/themes/monokai.css";
+@import "@/themes/catpuccin.css";
+
+/**
+ * There are more variables in the src/themes files.
+ */
 :root {
   box-sizing: border-box;
 
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: "Source Sans", system-ui, Avenir, Helvetica, Arial, sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -47,13 +54,56 @@
 
   /* Base Colors (more defined in individual theme files */
 
-  --color-accent: #248f8f;
+  --color-accent: oklch(0.5504 0.0915 194.82);
   --color-accent-fg: #fff;
 
   --color-data-table-fg: #000;
   --color-data-table-neutral: #f2f2f2;
   --color-data-table-positive: #fa5757;
   --color-data-table-negative: #52e365;
+
+  /* Gradients */
+
+  --gradient-red: linear-gradient(
+    0deg,
+    rgba(150, 63, 63, 1) 3%,
+    rgba(240, 149, 149, 1) 100%
+  );
+  --gradient-orange: linear-gradient(
+    0deg,
+    rgba(150, 101, 63, 1) 3%,
+    rgba(240, 193, 149, 1) 100%
+  );
+  --gradient-yellow: linear-gradient(
+    0deg,
+    rgba(168, 149, 84, 1) 2%,
+    rgba(217, 215, 163, 1) 100%
+  );
+  --gradient-green: linear-gradient(
+    0deg,
+    rgba(78, 138, 66, 1) 4%,
+    rgba(181, 245, 190, 1) 100%
+  );
+  --gradient-teal: linear-gradient(
+    0deg,
+    rgba(71, 168, 155, 1) 2%,
+    rgba(118, 207, 205, 1) 100%
+  );
+  --gradient-blue: linear-gradient(
+    0deg,
+    rgba(49, 86, 125, 1) 4%,
+    rgba(136, 201, 242, 1) 99%
+  );
+  --gradient-purple: linear-gradient(
+    0deg,
+    rgba(92, 72, 140, 1) 4%,
+    rgba(187, 181, 247, 1) 99%
+  );
+  --gradient-pink: linear-gradient(
+    0deg,
+    rgba(140, 72, 112, 1) 4%,
+    rgba(247, 181, 237, 1) 99%
+  );
 
   /* Colors & Borders (derived from colors defined in individual themes
    * (Concrete colors are defined witin individual theme files. Check `dark.css` for primary color tokens)
@@ -78,6 +128,9 @@
   --color-button-fg-dim: oklch(
     from var(--color-button-fg) l c h / var(--opacity-dim)
   );
+  --color-card-fg-dim: oklch(
+    from var(--color-card-fg) l c h / var(--opacity-dim)
+  );
   --color-input-fg-dim: oklch(
     from var(--color-input-fg) l c h / var(--opacity-dim)
   );
@@ -93,6 +146,9 @@
 
   --color-button-fg-very-dim: oklch(
     from var(--color-button-fg) l c h / var(--opacity-very-dim)
+  );
+  --color-card-fg-very-dim: oklch(
+    from var(--color-card-fg) l c h / var(--opacity-very-dim)
   );
   --color-input-fg-very-dim: oklch(
     from var(--color-input-fg) l c h / var(--opacity-very-dim)
@@ -111,9 +167,11 @@
     color-mix(in hsl, 40% var(--color-accent-fg), var(--color-accent));
 
   --border-button: 1px solid var(--color-button-border);
+  --border-card: 1px solid var(--color-card-border);
   --border-layer1: 1px solid var(--color-layer1-border);
   --border-layer2: 1px solid var(--color-layer2-border);
   --border-layer3: 1px solid var(--color-layer3-border);
+  --border-container: 1px solid var(--color-container-border);
   --border-input: 1px solid var(--color-input-border);
   --border-input-focused: 1px solid var(--color-accent);
 
@@ -140,6 +198,27 @@
     var(--color-layer1-bg)
   );
 
+  --color-card-bg-hover: color-mix(
+    in oklch,
+    var(--color-card-bg) 95%,
+    var(--color-card-fg)
+  );
+  --color-card-bg-active: color-mix(
+    in oklch,
+    var(--color-card-bg) 90%,
+    var(--color-card-fg)
+  );
+  --color-card-bg-disabled: color-mix(
+    in oklch,
+    var(--color-card-bg) 60%,
+    var(--color-layer1-bg)
+  );
+  --color-card-fg-disabled: color-mix(
+    in oklch,
+    var(--color-card-fg) 70%,
+    var(--color-layer1-bg)
+  );
+
   --color-input-bg-disabled: color-mix(
     in oklch,
     var(--color-input-bg) 60%,
@@ -153,7 +232,7 @@
 
   /* Button types */
 
-  --color-ghost-button-fg: var(--color-layer1-fg);
+  --color-ghost-button-fg: var(--color-layer1-fg-dim);
   --color-ghost-button-bg: transparent;
   --color-ghost-button-hover-bg: color-mix(
     in oklch,
@@ -165,29 +244,8 @@
     var(--color-layer1-fg) 15%,
     transparent
   );
-  --color-ghost-button-disabled-fg: var(--color-layer1-fg-dim);
+  --color-ghost-button-disabled-fg: var(--color-layer1-fg-very-dim);
   --color-ghost-button-disabled-bg: transparent;
-
-  --color-ghost-text-button: color-mix(
-    in oklch,
-    var(--color-layer1-fg) 80%,
-    var(--color-layer1-bg)
-  );
-  --color-ghost-text-button-hover: color-mix(
-    in oklch,
-    var(--color-layer1-fg) 87.5%,
-    var(--color-layer1-bg)
-  );
-  --color-ghost-text-button-active: color-mix(
-    in oklch,
-    var(--color-layer1-fg) 92.5%,
-    var(--color-layer1-bg)
-  );
-  --color-ghost-text-button-disabled: color-mix(
-    in oklch,
-    var(--color-layer1-fg) 50%,
-    var(--color-layer1-bg)
-  );
 }
 
 *,
@@ -197,6 +255,7 @@
 }
 
 body {
+  font-family: "Open Sans", system-ui, Avenir, Helvetica, Arial, sans-serif;
   font-size: var(--font-size-medium);
 }
 
@@ -217,9 +276,39 @@ h3,
 h4,
 h5,
 h6 {
+  font-weight: 600;
   margin-block: var(--spacing-5);
 }
 
 p {
   margin-block: var(--spacing-4);
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+
+  &:focus-visible {
+    outline: var(--outline-focused);
+  }
+}
+
+@font-face {
+  font-family: "Source Sans";
+  src: url("@/assets/fonts/SourceSans3-VariableFont_wght.ttf")
+    format("truetype");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Source Sans";
+  src: url("@/assets/fonts/SourceSans3-Italic-VariableFont_wght.ttf")
+    format("truetype");
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
 }

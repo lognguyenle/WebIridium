@@ -1,7 +1,7 @@
 .container {
   display: flex;
   flex-direction: row;
-  border: var(--border-button);
+  border: var(--border-layer3);
   border-radius: calc(var(--border-radius) + 1px);
   font-size: var(--font-size-small);
 }
@@ -9,7 +9,7 @@
 .button {
   font-size: 1em;
   color: var(--color-button-fg);
-  background-color: var(--color-button-bg);
+  background-color: var(--color-layer3-bg);
   border: none;
   flex-grow: 1;
   padding: var(--spacing-2);

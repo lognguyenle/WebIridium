@@ -1,3 +1,4 @@
+import { errorToDisplayString } from "@/features/formatUtils";
 import type { Action, ErrorResult, Result } from "@/features/taskPool";
 
 export type WorkerFailMode = "normal" | "always";
@@ -66,7 +67,7 @@ export const createMockWorkerMessageHandler = (
     } catch (err) {
       worker.port.postMessage({
         id: action.id,
-        errorMessage: err instanceof Error ? err.message : "unknown error",
+        errorMessage: errorToDisplayString(err),
       } as ErrorResult);
     }
   };

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useEffect } from "react";
+import { useRef, useEffect } from "react";
 import { useAtomValue } from "jotai";
 import * as echarts from "echarts/core";
 import { type ECharts } from "echarts/core";
@@ -6,12 +6,9 @@ import { type ECharts } from "echarts/core";
 import FloatingLegend from "../FloatingLegend";
 
 import type { SimulationResult } from "@/features/simulation/Simulator";
-import {
-  graphSettingsAtom,
-  independentVariableAtom,
-  paletteAtom,
-  variableSettingssAtom,
-} from "@/globals/settings";
+import { variableSettingssAtom } from "@/globals/model";
+import { graphSettingsAtom } from "@/globals/graphPresets";
+import { independentVariableAtom, paletteAtom } from "@/globals/settings";
 import { useScanIndependentVariable } from "@/features/simulation/useScanIndependentVariable";
 import { generatePlotParameters } from "../generatePlotParameters";
 
@@ -43,30 +40,16 @@ const SeriesLineChart = ({
   const plotContainerRef = useRef<HTMLDivElement>(null);
   const plotRef = useRef<ECharts | null>(null);
 
-  const { plotOptions, legendData } = useMemo(
-    () =>
-      generatePlotParameters(
-        result,
-        graphSettings,
-        variableSettingss,
-        timeCourseIndependentVariable,
-        scanIndependentVariable,
-        palette,
-        xAxisTitle,
-        yAxisTitle,
-        datasets,
-      ),
-    [
-      result,
-      graphSettings,
-      variableSettingss,
-      timeCourseIndependentVariable,
-      scanIndependentVariable,
-      palette,
-      xAxisTitle,
-      yAxisTitle,
-      datasets,
-    ],
+  const { plotOptions, legendData } = generatePlotParameters(
+    result,
+    graphSettings,
+    variableSettingss,
+    timeCourseIndependentVariable,
+    scanIndependentVariable,
+    palette,
+    xAxisTitle,
+    yAxisTitle,
+    datasets,
   );
 
   useEffect(() => {

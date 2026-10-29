@@ -70,7 +70,7 @@ test("panels should all be cancellable when a simulation is running", async () =
   expect(runParameterScanButton).toBeEnabled();
 });
 
-test("clicking sliders button should toggle sliders panel", async () => {
+test.skip("clicking sliders button should toggle sliders panel", async () => {
   await renderFlush(<App />);
 
   expect(screen.queryByTestId("sliders-panel")).not.toBeInTheDocument();

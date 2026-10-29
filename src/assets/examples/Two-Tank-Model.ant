@@ -1,0 +1,14 @@
+
+# Two tank model with additional
+# flow into tank 2 via Q4
+
+# Use x'= notation to specify odes
+
+h1' = (Q1 - k1*h1)/A
+h2' = (k1*h1 + Q4 - k2*h2)/A
+
+Q1 = 10  # Flow into tank 1
+Q4 = 5   # External flow into tank two
+k1 = 2
+k2 = 1
+A = 5    # Cross-sectional area of tanks

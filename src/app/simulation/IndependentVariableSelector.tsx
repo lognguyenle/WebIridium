@@ -1,9 +1,7 @@
 import { useAtom, useAtomValue } from "jotai";
 import styles from "./IndependentVariableSelector.module.css";
-import {
-  independentVariableAtom,
-  variableSettingssAtom,
-} from "@/globals/settings";
+import { variableSettingssAtom } from "@/globals/model";
+import { independentVariableAtom } from "@/globals/settings";
 import { variablesAtom } from "@/globals/model";
 import { groupVariablesForSelectComponent } from "@/features/category";
 import Select from "@/components/input/Select";

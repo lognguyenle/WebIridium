@@ -57,6 +57,10 @@
     background-color: var(--color-accent);
     color: var(--color-accent-fg);
   }
+
+  &[data-disabled] {
+    color: var(--color-layer1-fg-dim);
+  }
 }
 
 a.item {

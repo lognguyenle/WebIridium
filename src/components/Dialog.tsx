@@ -1,6 +1,7 @@
 import clsx from "clsx";
 
 import styles from "./Dialog.module.css";
+import buttonStyles from "@/components/Button.module.css";
 
 import { Dialog as RadixDialog, VisuallyHidden } from "radix-ui";
 
@@ -46,7 +47,9 @@ const Dialog = ({
               {title}
             </RadixDialog.Title>
 
-            <RadixDialog.Close className={styles.close}>
+            <RadixDialog.Close
+              className={clsx(buttonStyles.ghost, styles.close)}
+            >
               <CrossIcon />
             </RadixDialog.Close>
           </div>

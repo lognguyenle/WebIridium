@@ -1,4 +1,4 @@
-import type { ModelInfo, SimResult } from "@/types/copasi";
+import type { ModelInfo, SimResult } from "@/vendor/copasi";
 import {
   Simulator,
   type SteadyStateResult,
@@ -24,6 +24,7 @@ export class CopasiSimulator extends Simulator {
     super();
     this.#workerPool = new WorkerPool(() => createWorker("copasi"), {
       maxWorkers: 3,
+      hasOrderedResults: true,
     });
   }
 
@@ -56,7 +57,6 @@ export class CopasiSimulator extends Simulator {
         title,
         values: result.columns[index],
       })),
-      columnSet: new Set(result.titles),
     };
   }
 

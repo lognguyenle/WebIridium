@@ -15,7 +15,7 @@ export default tseslint.config(
       "dist",
       "public",
       "coverage",
-      "src/types/copasi.d.ts",
+      "src/vendor",
       "src/features/editor/language-handler",
     ],
   },

@@ -3,7 +3,9 @@ import type { ScatterSeriesOption } from "echarts/types/src/chart/scatter/Scatte
 import type { LineSeriesOption } from "echarts/types/src/chart/line/LineSeries.js";
 
 import type { SimulationResult } from "@/features/simulation/Simulator";
-import type { GraphSettings, VariableSettings } from "@/globals/settings";
+import { getVariableSettingsFrom } from "@/globals/model";
+import { type VariableSettings } from "@/globals/settings";
+import type { GraphSettings } from "@/features/savedData";
 import type { Dataset } from "@/globals/overlays";
 
 import type { LegendDataItem } from "./FloatingLegend";
@@ -108,7 +110,7 @@ export const generatePlotParameters = (
   );
   const parameterSettings =
     result.type === "parameterScan"
-      ? variableSettingss[result.parameter]
+      ? getVariableSettingsFrom(variableSettingss, result.parameter)
       : null;
 
   if (independentVariableColumn) {
@@ -120,7 +122,7 @@ export const generatePlotParameters = (
     } of columns) {
       if (variableName === independentVariableName) continue;
 
-      const settings = variableSettingss[variableName];
+      const settings = getVariableSettingsFrom(variableSettingss, variableName);
       if (!settings.visible) continue;
       let finalColor: string = "red";
       if (palette === "Custom") {
@@ -148,7 +150,7 @@ export const generatePlotParameters = (
         data: values.map((v, i) => [independentVariableColumn.values[i], v]),
         type: "line",
         lineStyle: {
-          width: settings.width,
+          width: settings.width * graphSettings.globalWidth,
           color: finalColor,
           type: DASH_ARRAYS[settings.lineStyle],
         },
@@ -229,7 +231,8 @@ export const generatePlotParameters = (
           .filter(
             (c) =>
               c.variableName !== independentVariableName &&
-              variableSettingss[c.variableName].visible,
+              getVariableSettingsFrom(variableSettingss, c.variableName)
+                .visible,
           )
           .map((c) => c.values)
           .flat(),

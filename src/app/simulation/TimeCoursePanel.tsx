@@ -21,7 +21,6 @@ import {
   isSimulatingAtom,
 } from "@/globals/simulation";
 import { modelStatusAtom } from "@/globals/model";
-import { isSliderSimulationQueuedAtom } from "@/globals/slider";
 import BooleanProperty from "@/components/property-list/BooleanProperty";
 
 export interface TimeCoursePanelProps {
@@ -31,7 +30,6 @@ export interface TimeCoursePanelProps {
 export const TimeCoursePanel = ({ visible }: TimeCoursePanelProps) => {
   const { toast } = useToast();
   const isSimulating = useAtomValue(isSimulatingAtom);
-  const isSliderSimulationQueued = useAtomValue(isSliderSimulationQueuedAtom);
   const modelStatus = useAtomValue(modelStatusAtom);
   const simulateTimeCourse = useSetAtom(simulateTimeCourseAtom);
   const cancelSimulation = useSetAtom(cancelSimulationAtom);
@@ -65,7 +63,7 @@ export const TimeCoursePanel = ({ visible }: TimeCoursePanelProps) => {
       <CancellableButton
         icon={<PlayIcon />}
         disabled={modelStatus.type === "loading"}
-        isLoading={isSimulating || isSliderSimulationQueued}
+        isLoading={isSimulating}
         onClick={handleSimulateClick}
         canCancel={isSimulating}
         onCancel={handleCancelClick}

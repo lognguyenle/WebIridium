@@ -5,10 +5,8 @@ import styles from "./visuals.module.css";
 
 import { useScanIndependentVariable } from "@/features/simulation/useScanIndependentVariable";
 import type { SimulationResult } from "@/features/simulation/Simulator";
-import {
-  independentVariableAtom,
-  variableSettingssAtom,
-} from "@/globals/settings";
+import { variableSettingssAtom } from "@/globals/model";
+import { independentVariableAtom } from "@/globals/settings";
 import { generateTableParameters } from "../generateTableParameters";
 
 import DataTable from "@/components/DataTable";
