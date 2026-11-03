@@ -1,5 +1,9 @@
 import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
+import type {
+  AgentDebugInfo,
+  CommittedActionRecord,
+} from "@/features/chat/harness/types";
 
 // TODO: Put all the settings under one chat settings object
 
@@ -23,24 +27,40 @@ export const systemPromptAtom = atomWithStorage<string>(
   DEFAULT_SYSTEM_PROMPT,
 );
 
+export const confirmToolActionsAtom = atomWithStorage<boolean>(
+  "chat_confirmToolActions",
+  true,
+);
+
+export const showDebugDetailsAtom = atomWithStorage<boolean>(
+  "chat_showDebugDetails",
+  true,
+);
+
 export const AVAILABLE_MODELS = [
+  // OpenAI
+  { id: "gpt-5.4-mini", name: "GPT-5.4 Mini", provider: "openai" },
+  { id: "gpt-5.4", name: "GPT-5.4", provider: "openai" },
+  { id: "gpt-5.4-pro", name: "GPT-5.4 Pro", provider: "openai" },
+  { id: "gpt-5.4-nano", name: "GPT-5.4 Nano", provider: "openai" },
   { id: "gpt-5.2", name: "GPT-5.2", provider: "openai" },
   { id: "gpt-5.1", name: "GPT-5.1", provider: "openai" },
   { id: "gpt-5", name: "GPT-5", provider: "openai" },
-  { id: "gpt-5-mini", name: "GPT-5 mini", provider: "openai" },
-  { id: "gpt-5-nano", name: "GPT-5 nano", provider: "openai" },
-  { id: "gpt-4o", name: "GPT-4o", provider: "openai" },
-  { id: "gpt-4o-mini", name: "GPT-4o Mini", provider: "openai" },
-  { id: "claude-opus-4-6", name: "Claude 4.6 Opus", provider: "anthropic" },
+  { id: "gpt-5-mini", name: "GPT-5 Mini", provider: "openai" },
+  { id: "o4-mini", name: "o4-mini", provider: "openai" },
+  { id: "o3-mini", name: "o3-mini", provider: "openai" },
+  { id: "o1", name: "o1", provider: "openai" },
+
+  // Anthropic
+  { id: "claude-haiku-5-5", name: "Claude 5.5 Haiku", provider: "anthropic" },
+  { id: "claude-sonnet-5-5", name: "Claude 5.5 Sonnet", provider: "anthropic" },
+  { id: "claude-opus-5-5", name: "Claude 5.5 Opus", provider: "anthropic" },
+  { id: "claude-fable-5-1", name: "Claude 5.1 Fable", provider: "anthropic" },
   { id: "claude-sonnet-4-6", name: "Claude 4.6 Sonnet", provider: "anthropic" },
-  {
-    id: "claude-haiku-4-5-20251001",
-    name: "Claude 4.5 Haiku",
-    provider: "anthropic",
-  },
+  { id: "claude-opus-4-6", name: "Claude 4.6 Opus", provider: "anthropic" },
 ];
 
-export const modelAtom = atom<string>("gpt-4o");
+export const modelAtom = atom<string>("gpt-5.4-mini");
 
 export type ChatRole = "user" | "llm";
 
@@ -49,6 +69,22 @@ export interface ChatMessage {
   role: ChatRole;
   text: string;
   isError?: boolean;
+  statusText?: string;
+  executedTools?: Array<{
+    id: string;
+    name: string;
+    arguments: Record<string, any>;
+    result: {
+      success: boolean;
+      message: string;
+      data?: unknown;
+      error?: string;
+    };
+    turn?: number;
+    step?: number;
+  }>;
+  committedActions?: CommittedActionRecord[];
+  debugInfo?: AgentDebugInfo;
 }
 
 export interface ChatConversation {
