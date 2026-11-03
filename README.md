@@ -16,6 +16,10 @@ Web-based simulation and analysis of biological models.
 
 Try it out now! https://sys-bio.github.io/WebIridium/
 
+The desktop version that runs on Windows and the Mac can be found at
+
+https://github.com/sys-bio/IridiumSimulator
+
 ## Other Links
 
 - Development Guide: [OVERVIEW.md](./DEVINSTRUCTIONS/OVERVIEW.md)
