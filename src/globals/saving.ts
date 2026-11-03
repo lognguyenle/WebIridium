@@ -1,6 +1,6 @@
 import { atom } from "jotai";
 import {
-  fileSystemChangeIdAtom,
+  incrementDbChangeIdAtom,
   hasActiveProjectAtom,
   metadataAtom,
 } from "./project";
@@ -13,7 +13,7 @@ import type {
 import { currentPresetAtom, projectGraphSettingsAtom } from "./graphPresets";
 import { parameterScanOptionsAtom, timeCourseParametersAtom } from "./settings";
 import { historyAtom } from "./history";
-import { saveProjectRaw } from "@/features/fileSystem";
+import { saveProjectRaw } from "@/features/db";
 
 const _isSavingAtom = atom(0);
 export const isSavingAtom = atom((get) => get(_isSavingAtom) > 0);
@@ -67,7 +67,7 @@ export const savePartialProjectAtom = atom(
 
       await saveProjectRaw(savingData);
     } finally {
-      set(fileSystemChangeIdAtom, (old) => old + 1);
+      set(incrementDbChangeIdAtom);
       // add a little delay so it doesn't go too fast
       setTimeout(() => {
         set(_isSavingAtom, get(_isSavingAtom) - 1);

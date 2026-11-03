@@ -1,13 +1,11 @@
 // eslint-disable-next-line
 import "allotment/dist/style.css";
 
-import { useEffect, useRef } from "react";
-import { useAtom, useAtomValue, useSetAtom } from "jotai";
+import { useRef } from "react";
+import { useAtom, useAtomValue } from "jotai";
 import { Allotment, LayoutPriority } from "allotment";
 
 import styles from "./App.module.css";
-
-import { setTheme, themeMediaQuery } from "@/features/theme";
 
 import {
   currentLeftPanelAtom,
@@ -16,17 +14,20 @@ import {
   currentRightPanelAtom,
   availableLeftPanelsAtom,
 } from "@/globals/layout";
-import { themeAtom, tryUpdateThemeIfAutomaticAtom } from "@/globals/appearance";
-import { activeProjectFileAtom } from "@/globals/project";
+import { useAutomaticTheme } from "@/globals/appearance";
+import {
+  activeProjectFileAtom,
+  useDbChangeIdCrossTabSync,
+} from "@/globals/project";
 
 import AppErrorWrapperPage from "./AppErrorWrapperPage";
 import WorkspaceProvider from "./WorkspaceProvider";
 import Sidebar from "./Sidebar";
 import AppMenubar from "./AppMenubar";
 import AppStatusBar from "./AppStatusBar";
-import ProjectAutoSaver from "./ProjectAutoSaver";
 import { ToastProvider } from "@/components/Toast";
 import { TooltipProvider } from "@/components/Tooltip";
+import { DatabaseInitializer } from "./DatabaseInitializer";
 
 import TimeCoursePanel from "./simulation/TimeCoursePanel";
 import ParameterScanPanel from "./simulation/ParameterScanPanel";
@@ -43,6 +44,7 @@ import ResultTabbedPanel from "./results/ResultsTabbedPanel";
 import GraphSettingsPanel from "./graphSettings/GraphSettingsPanel";
 import ChatPanel from "./ChatPanel";
 import StartPanel from "./start/StartPanel";
+import useAutoSave from "./useAutoSave";
 
 const getDefaultResultsPanelWidth = () => {
   if (window.matchMedia && window.matchMedia("(min-width: 2000px)").matches) {
@@ -163,34 +165,23 @@ const AppContent = () => {
   );
 };
 
-const ThemeUpdater = () => {
-  const tryUpdateThemeIfAutomatic = useSetAtom(tryUpdateThemeIfAutomaticAtom);
-  const theme = useAtomValue(themeAtom);
+const AppWithHooks = () => {
+  useDbChangeIdCrossTabSync();
+  useAutomaticTheme();
+  useAutoSave();
 
-  useEffect(() => {
-    const handleChange = () => {
-      tryUpdateThemeIfAutomatic();
-    };
-
-    themeMediaQuery.addEventListener("change", handleChange);
-
-    return () => themeMediaQuery.removeEventListener("change", handleChange);
-  }, [tryUpdateThemeIfAutomatic]);
-
-  useEffect(() => {
-    setTheme(theme);
-  }, [theme]);
-
-  return null;
+  return (
+    <DatabaseInitializer>
+      <AppContent />
+    </DatabaseInitializer>
+  );
 };
 
 const App = () => {
   return (
     <AppErrorWrapperPage>
       <AppProvider>
-        <ThemeUpdater />
-        <ProjectAutoSaver />
-        <AppContent />
+        <AppWithHooks />
       </AppProvider>
     </AppErrorWrapperPage>
   );

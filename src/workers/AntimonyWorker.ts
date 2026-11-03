@@ -60,7 +60,7 @@ const handleAction = async (action) => {
       const sbmlConversion = antimony.convertAntimonyToSBML(code);
       // TODO: notify user about these warnings
       if (sbmlConversion.getWarnings()) {
-        console.warn(antimonyConversion.getWarnings());
+        console.warn(sbmlConversion.getWarnings());
       }
       if (!sbmlConversion.isSuccess()) {
         throw new Error(sbmlConversion.getResult());

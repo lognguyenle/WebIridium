@@ -6,7 +6,6 @@ import {
   activeConversationAtom,
   upsertActiveConversationAtom,
   deleteConversationAtom,
-  migrateFromLegacyDbAtom,
   openAiApiKeyAtom,
   claudeApiKeyAtom,
   systemPromptAtom,
@@ -664,17 +663,12 @@ const ChatPanel = ({ visible }: ChatPanelProps) => {
 
   const upsertActiveConversation = useSetAtom(upsertActiveConversationAtom);
   const deleteConversation = useSetAtom(deleteConversationAtom);
-  const migrateChatData = useSetAtom(migrateFromLegacyDbAtom);
 
   const [conversationToDelete, setConversationToDelete] =
     useState<ChatConversation | null>(null);
   const [renameInput, setRenameInput] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const renameInputRef = useRef<HTMLInputElement | null>(null);
-
-  useEffect(() => {
-    void migrateChatData();
-  }, [migrateChatData]);
 
   const hasAnyApiKey = Boolean(openAiApiKey || claudeApiKey);
 
