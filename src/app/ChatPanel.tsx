@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useAtom, useSetAtom, useStore } from "jotai";
 
 import {
@@ -681,7 +681,7 @@ const ChatPanel = ({ visible }: ChatPanelProps) => {
   const lastHandledCompletedIdRef = useRef<string | null>(null);
   const isRestoringScrollRef = useRef(false);
 
-  const scrollToLastResponseTop = (smooth = true) => {
+  const scrollToLastResponseTop = useCallback((smooth = true) => {
     const el = messagesRef.current;
     if (!el) return;
     requestAnimationFrame(() => {
@@ -702,7 +702,7 @@ const ChatPanel = ({ visible }: ChatPanelProps) => {
         conversationScrollPositionsRef.current.set(currentConvKey, scrollTop);
       }
     });
-  };
+  }, [activeConversation?.id]);
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     if (!visibleRef.current || isRestoringScrollRef.current) return;
@@ -742,7 +742,7 @@ const ChatPanel = ({ visible }: ChatPanelProps) => {
         el.scrollHeight,
       );
     }
-  }, [messages]);
+  }, [messages, activeConversation?.id, scrollToLastResponseTop]);
 
   useEffect(() => {
     const wasVisible = prevVisibleRef.current;
@@ -785,7 +785,7 @@ const ChatPanel = ({ visible }: ChatPanelProps) => {
         });
       }
     }
-  }, [visible, activeConversation]);
+  }, [visible, activeConversation, scrollToLastResponseTop]);
 
   const saveConversation = (newMessages: Message[]) => {
     const nonThinking = newMessages.filter(
@@ -1147,9 +1147,7 @@ const ChatPanel = ({ visible }: ChatPanelProps) => {
                 thinking: false,
                 isError: true,
                 debugInfo: {
-                  provider: (isClaude ? "anthropic" : "openai") as
-                    | "anthropic"
-                    | "openai",
+                  provider: isClaude ? ("anthropic" as const) : ("openai" as const),
                   model,
                   systemPrompt: assembleAgentSystemPrompt(toolContext, {
                     userSystemPrompt: systemPrompt,
@@ -1502,6 +1500,7 @@ const ChatPanel = ({ visible }: ChatPanelProps) => {
                 className={styles.messages}
                 ref={messagesRef}
                 onScroll={handleScroll}
+                data-testid="chat-messages-container"
               >
                 <div className={styles.emptyChatContainer}>
                   <button
@@ -1570,6 +1569,7 @@ const ChatPanel = ({ visible }: ChatPanelProps) => {
               className={styles.newChatCenterWrapper}
               ref={messagesRef}
               onScroll={handleScroll}
+              data-testid="new-chat-center-wrapper"
             >
               <div className={styles.newChatEmptyState}>
                 <div className={styles.newChatEmptyIcon}>
@@ -1590,6 +1590,7 @@ const ChatPanel = ({ visible }: ChatPanelProps) => {
                 className={styles.messages}
                 ref={messagesRef}
                 onScroll={handleScroll}
+                data-testid="chat-messages-container"
               >
                 {messages.map((m) => (
                   <div

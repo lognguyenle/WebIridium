@@ -38,6 +38,7 @@ export interface ToolExecutionResult {
   message: string;
   data?: unknown;
   error?: string;
+  verifiedPostActionState?: string;
 }
 
 export interface StateChangeItem {

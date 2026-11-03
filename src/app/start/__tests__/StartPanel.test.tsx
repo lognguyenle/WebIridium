@@ -200,7 +200,7 @@ describe("deleting", () => {
 
     expect(screen.getByText("test")).toBeInTheDocument();
 
-    await userEvent.click(screen.getByLabelText("More"));
+    await userEvent.click(screen.getAllByLabelText("More")[0]);
     await userEvent.click(screen.getByText("Delete"));
 
     await waitFor(() => {

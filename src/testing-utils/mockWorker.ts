@@ -83,7 +83,11 @@ export class MockWorkerPort extends EventTarget {
 
   emitMessageEvent(data: unknown) {
     if (this.worker.terminated) return;
-    this.dispatchEvent(new MessageEvent("message", { data }));
+    try {
+      this.dispatchEvent(new MessageEvent("message", { data }));
+    } catch {
+      // Ignore if dispatched during/after environment teardown
+    }
   }
 
   postMessage(data: unknown) {
@@ -108,7 +112,11 @@ export class MockWorker extends EventTarget {
 
   emitMessageEvent(data: unknown) {
     if (this.terminated) return;
-    this.dispatchEvent(new MessageEvent("message", { data }));
+    try {
+      this.dispatchEvent(new MessageEvent("message", { data }));
+    } catch {
+      // Ignore if dispatched during/after environment teardown
+    }
   }
 
   postMessage(data: unknown) {

@@ -27,13 +27,15 @@ describe("addVariablePresetsToModel", () => {
     const expectedContent = testFiles[`${nameWithoutExtension}_expected.ant`];
 
     it(`should work for ${name}`, () => {
+      const normalizedContent = content.replace(/\r\n/g, "\n").trim();
+      const normalizedExpected = expectedContent.replace(/\r\n/g, "\n").trim();
       const [result, { line }] = addVariablePresetToModel(
-        content.trim(),
+        normalizedContent,
         PRESET_NAME,
         PRESETS,
       );
-      expect(result).toBe(expectedContent.trim());
-      expect(result.split("\n")[line]).toMatch(COMMENT_REGEX);
+      expect(result.replace(/\r\n/g, "\n")).toBe(normalizedExpected);
+      expect(result.replace(/\r\n/g, "\n").split("\n")[line]).toMatch(COMMENT_REGEX);
     });
   }
 });

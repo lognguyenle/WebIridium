@@ -6,7 +6,7 @@ import { type AgentTool, type ToolCall } from "../types";
 
 export interface AnthropicExecutionTurn {
   role: "user" | "assistant";
-  content: any;
+  content: unknown;
 }
 
 export interface AnthropicResponsePayload {
@@ -23,7 +23,7 @@ export interface AnthropicResponsePayload {
 export interface AnthropicCallResult {
   text: string;
   toolCalls: ToolCall[];
-  rawContent: any;
+  rawContent: unknown;
 }
 
 export const callAnthropicApi = async (params: {

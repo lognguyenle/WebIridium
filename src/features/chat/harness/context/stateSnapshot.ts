@@ -24,7 +24,9 @@ import {
 } from "@/globals/project";
 import { simulationResultAtom, isSimulatingAtom } from "@/globals/simulation";
 import { currentRightPanelAtom, currentLeftPanelAtom } from "@/globals/layout";
-import type { SimulationResult } from "@/features/simulation/Simulator";
+import type { Simulator, Variable } from "@/features/simulation/Simulator";
+import type { VariableSettings } from "@/globals/settings";
+import type { ModelStatus } from "@/globals/model";
 
 export interface ApplicationStateSnapshot {
   project: {
@@ -87,14 +89,19 @@ export interface StateSnapshotOptions {
   includeSimulationSummary?: boolean;
 }
 
-const resolveSimulatorName = (sim: any): string => {
+const resolveSimulatorName = (sim: unknown): string => {
   if (!sim) return "COPASI";
-  if (typeof sim.name === "string") return sim.name;
-  try {
-    return getSimulatorName(sim);
-  } catch {
-    return "COPASI";
+  if (typeof sim === "object" && sim !== null) {
+    if ("name" in sim && typeof (sim as { name: unknown }).name === "string") {
+      return (sim as { name: string }).name;
+    }
+    try {
+      return getSimulatorName(sim as Simulator);
+    } catch {
+      return "COPASI";
+    }
   }
+  return "COPASI";
 };
 
 export const getApplicationStateSnapshot = (
@@ -108,13 +115,13 @@ export const getApplicationStateSnapshot = (
 
   const rawSim = context.get(simulatorAtom);
   const simulatorName = resolveSimulatorName(rawSim);
-  const canRunSteadyState = rawSim?.capabilities?.canRunSteadyState ?? true;
+  const canRunSteadyState = (rawSim as { capabilities?: { canRunSteadyState?: boolean } } | null)?.capabilities?.canRunSteadyState ?? true;
 
   const resultsViewOpen = context.get(currentRightPanelAtom) === "Results";
   const activeLeftPanel =
-    (context.get(currentLeftPanelAtom) as string | null) ?? null;
+    context.get(currentLeftPanelAtom) ?? null;
 
-  const rawTimeCourse = context.get(timeCourseParametersAtom) as any;
+  const rawTimeCourse = context.get(timeCourseParametersAtom);
   const timeCourse = {
     startTime:
       typeof rawTimeCourse?.startTime === "number"
@@ -128,11 +135,9 @@ export const getApplicationStateSnapshot = (
         : 100,
   };
 
-  const rawScan = context.get(parameterScanOptionsAtom) as any;
+  const rawScan = context.get(parameterScanOptionsAtom);
   const parameterScan = {
-    mode: (rawScan?.mode === "steadyState" ? "steadyState" : "timeCourse") as
-      | "timeCourse"
-      | "steadyState",
+    mode: rawScan?.mode === "steadyState" ? ("steadyState" as const) : ("timeCourse" as const),
     varyingParameter: rawScan?.varyingParameter ?? null,
     min: typeof rawScan?.min === "number" ? rawScan.min : 0,
     max: typeof rawScan?.max === "number" ? rawScan.max : 10,
@@ -141,13 +146,12 @@ export const getApplicationStateSnapshot = (
     useLogarithmicDistribution: Boolean(rawScan?.useLogarithmicDistribution),
   };
 
-  const rawVars = context.get(variablesAtom) || [];
-  const varNamesFromVars = rawVars.map((v: any) =>
-    typeof v === "string" ? v : v?.name || String(v),
-  );
-  const rawSettings =
-    (context.get(variableSettingssAtom) as Record<string, any>) || {};
-  const allPlottableVariables = Array.from(
+  const rawVars = (context.get(variablesAtom) || []) as Array<Variable | string | { name?: string; category?: string }>;
+  const varNamesFromVars = rawVars
+    .map((v) => (typeof v === "string" ? v : v.name || ""))
+    .filter(Boolean);
+  const rawSettings = (context.get(variableSettingssAtom) || {}) as Record<string, VariableSettings | undefined>;
+  const allPlottableVariables: string[] = Array.from(
     new Set([...varNamesFromVars, ...Object.keys(rawSettings)]),
   );
   const visibleCurves: string[] = [];
@@ -161,25 +165,21 @@ export const getApplicationStateSnapshot = (
   }
 
   const horizontalAxis = context.get(independentVariableAtom) ?? "Time";
-  const allowedIndependentVars = rawVars.filter((v: any) =>
-    typeof v === "object" && v !== null && "category" in v
-      ? v.category === "Time" || v.category === "Floating Species"
-      : true,
-  );
-  const validIndependentVariables = [
+  const allowedIndependentVars = rawVars.filter((v) => {
+    if (typeof v === "object" && v !== null && "category" in v) {
+      return v.category === "Time" || v.category === "Floating Species";
+    }
+    return true;
+  });
+  const validIndependentVariables: string[] = [
     "Time",
     ...allowedIndependentVars
-      .map(
-        (v: any) =>
-          (typeof v === "string" ? v : v?.name || String(v)) as string,
-      )
-      .filter((n: string) => n.toLowerCase() !== "time"),
+      .map((v) => (typeof v === "string" ? v : v.name || ""))
+      .filter((n) => n && n.toLowerCase() !== "time"),
   ];
 
   const isSimulating = Boolean(context.get(isSimulatingAtom));
-  const simResult = context.get(
-    simulationResultAtom,
-  ) as SimulationResult | null;
+  const simResult = context.get(simulationResultAtom);
 
   const simResultSummary: ApplicationStateSnapshot["simulationResult"] = {
     hasResult: Boolean(simResult),
@@ -188,15 +188,11 @@ export const getApplicationStateSnapshot = (
   };
 
   if (simResult && options.includeSimulationSummary !== false) {
-    if (
-      simResult.type === "timeCourse" &&
-      Array.isArray(simResult.columns) &&
-      simResult.columns.length > 0
-    ) {
+    if (simResult.type === "timeCourse" && simResult.columns.length > 0) {
       const timeCol =
         simResult.columns.find((c) => c.title.toLowerCase() === "time") ||
         simResult.columns[0];
-      const count = timeCol?.values?.length ?? 0;
+      const count = timeCol?.values.length ?? 0;
       simResultSummary.timePointsCount = count;
       if (count > 0) {
         simResultSummary.timeRange = {
@@ -215,33 +211,25 @@ export const getApplicationStateSnapshot = (
         simResultSummary.initialValues = initialVals;
         simResultSummary.finalValues = finalVals;
       }
-    } else if (
-      simResult.type === "steadyState" &&
-      Array.isArray((simResult as any).concentrations)
-    ) {
+    } else if (simResult.type === "steadyState") {
       const concentrations: Record<string, number> = {};
-      for (const item of (simResult as any).concentrations) {
+      for (const item of simResult.concentrations) {
         concentrations[item.name] = Number(item.value.toPrecision(4));
       }
       simResultSummary.steadyStateConcentrations = concentrations;
     } else if (simResult.type === "parameterScan") {
       simResultSummary.parameterScanSummary = {
-        parameter: (simResult as any).parameter || "unknown",
-        mode: (simResult as any).mode || "timeCourse",
-        scanCount: Array.isArray((simResult as any).scans)
-          ? (simResult as any).scans.length
-          : 0,
+        parameter: simResult.parameter,
+        mode: simResult.mode,
+        scanCount: simResult.scans.length,
       };
     }
   }
 
-  const rawModelStatus = context.get(modelStatusAtom) as any;
+  const rawModelStatus = context.get(modelStatusAtom) as ModelStatus | undefined;
   const modelStatus = {
-    status: (rawModelStatus?.type || "success") as
-      | "loading"
-      | "error"
-      | "success",
-    statusMessage: rawModelStatus?.message || null,
+    status: (rawModelStatus?.type ?? "success"),
+    statusMessage: rawModelStatus && "message" in rawModelStatus ? rawModelStatus.message : null,
     code: options.includeModelCode
       ? context.get(editorContentAtom) || ""
       : undefined,

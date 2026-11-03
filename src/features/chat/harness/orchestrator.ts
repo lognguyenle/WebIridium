@@ -44,11 +44,11 @@ export interface OrchestratorParams {
   onConfirmAction?: (request: ConfirmationRequest) => Promise<boolean>;
 }
 
-export const getJotaiToolContext = (customStore?: any): ToolContext => {
+export const getJotaiToolContext = (customStore?: ReturnType<typeof getDefaultStore>): ToolContext => {
   const store = customStore ?? getDefaultStore();
   return {
     get: (atom) => store.get(atom),
-    set: (atom, ...args: any[]) => store.set(atom, ...args),
+    set: (atom, ...args) => store.set(atom, ...args),
   };
 };
 
@@ -97,7 +97,7 @@ export const executeHarnessTurn = async (
       const liveState = formatCurrentApplicationState(context);
       anthropicMessages[lastAnthropicUserIdx] = {
         ...anthropicMessages[lastAnthropicUserIdx],
-        content: `${anthropicMessages[lastAnthropicUserIdx].content}\n\n[LIVE APPLICATION STATE AT TIME OF REQUEST]:\n${liveState}`,
+        content: `${String(anthropicMessages[lastAnthropicUserIdx].content)}\n\n[LIVE APPLICATION STATE AT TIME OF REQUEST]:\n${liveState}`,
       };
     }
 
@@ -224,7 +224,7 @@ export const executeHarnessTurn = async (
           try {
             const result = await toolDef.execute(call.arguments, context);
             if (toolDef.mutatesState && result && typeof result === "object") {
-              (result as any).verifiedPostActionState =
+              result.verifiedPostActionState =
                 formatCurrentApplicationState(context);
             }
             const record: ExecutedToolRecord = {
@@ -469,7 +469,7 @@ export const executeHarnessTurn = async (
           try {
             const result = await toolDef.execute(call.arguments, context);
             if (toolDef.mutatesState && result && typeof result === "object") {
-              (result as any).verifiedPostActionState =
+              result.verifiedPostActionState =
                 formatCurrentApplicationState(context);
             }
             const record: ExecutedToolRecord = {

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { createStore } from "jotai";
+import { createStore, type Atom, type WritableAtom } from "jotai";
 import {
   configureTimeCourseTool,
   configureParameterScanTool,
@@ -24,6 +24,7 @@ import {
 } from "@/globals/model";
 import { simulatorAtom, getSimulatorName } from "@/globals/simulator";
 import { activeProjectFileAtom, metadataAtom } from "@/globals/project";
+import type { ProjectId } from "@/features/savedData";
 import { currentRightPanelAtom } from "@/globals/layout";
 import { simulateTimeCourseAtom } from "@/globals/simulation";
 import { saveFullProjectAtom } from "@/globals/saving";
@@ -32,27 +33,41 @@ import { type ToolContext } from "../chat/harness/types";
 describe("Simulation Tools", () => {
   let store: ReturnType<typeof createStore>;
   let context: ToolContext;
-  let mockSimulateTimeCourse: any;
-  let mockVariables: any[] = [];
+  let mockSimulateTimeCourse: ReturnType<typeof vi.fn>;
+  let mockVariables: Array<{ name: string; category?: string }> = [];
 
   beforeEach(() => {
     store = createStore();
     mockVariables = [];
-    store.set(activeProjectFileAtom, "mock-project-123" as any);
+    store.set(activeProjectFileAtom, "mock-project-123" as unknown as ProjectId);
     mockSimulateTimeCourse = vi.fn().mockResolvedValue({ type: "success" });
 
     context = {
-      get: ((atom: any) => {
-        if (atom === modelStatusAtom) return { type: "success" };
-        if (atom === variablesAtom) return mockVariables;
+      get: <Value>(atom: Atom<Value>): Value => {
+        if (atom === (modelStatusAtom as unknown as Atom<Value>)) {
+          return { type: "success" } as Value;
+        }
+        if (atom === (variablesAtom as unknown as Atom<Value>)) {
+          return mockVariables as Value;
+        }
         return store.get(atom);
-      }) as any,
-      set: ((atom: any, ...args: any[]) => {
-        if (atom === simulateTimeCourseAtom) {
-          return mockSimulateTimeCourse(...args);
+      },
+      set: <Value, Args extends unknown[], Result>(
+        atom: WritableAtom<Value, Args, Result>,
+        ...args: Args
+      ): Result => {
+        if (
+          atom ===
+          (simulateTimeCourseAtom as unknown as WritableAtom<
+            Value,
+            Args,
+            Result
+          >)
+        ) {
+          return (mockSimulateTimeCourse as (...a: Args) => Result)(...args);
         }
         return store.set(atom, ...args);
-      }) as any,
+      },
     };
   });
 
@@ -342,7 +357,7 @@ describe("Simulation Tools", () => {
       store.set(activeProjectFileAtom, null);
       const result = await getApplicationStateTool.execute({}, context);
       expect(result.success).toBe(true);
-      const data = result.data as any;
+      const data = result.data as { projectOpen: boolean; status: string };
       expect(data.projectOpen).toBe(false);
       expect(data.status).toBe("NO_ACTIVE_PROJECT");
     });
@@ -373,7 +388,12 @@ describe("Simulation Tools", () => {
 
       const result = await getApplicationStateTool.execute({}, context);
       expect(result.success).toBe(true);
-      const data = result.data as any;
+      const data = result.data as {
+        project: { isOpen: boolean; id: string };
+        timeCourse: { endTime: number; numberOfPoints: number };
+        plot: { visibleCurves: string[]; hiddenCurves: string[] };
+        stateSummaryText: string;
+      };
       expect(data.project.isOpen).toBe(true);
       expect(data.project.id).toBe("my-active-proj");
       expect(data.timeCourse.endTime).toBe(75);
@@ -493,7 +513,7 @@ describe("Simulation Tools", () => {
             field: "Horizontal X-Axis",
             proposedValue: expect.stringContaining(
               "INVALID: GUI only allows Time or Floating Species",
-            ),
+            ) as unknown as string,
           }),
         ]),
       );
@@ -550,13 +570,24 @@ describe("Simulation Tools", () => {
       let updatedContent = "";
       const customContext: ToolContext = {
         ...context,
-        set: ((atom: any, ...args: any[]) => {
-          if (atom === updateEditorContentAtom) {
-            updatedContent = args[0].content;
-            return Promise.resolve({ type: "success" });
+        set: <Value, Args extends unknown[], Result>(
+          atom: WritableAtom<Value, Args, Result>,
+          ...args: Args
+        ): Result => {
+          if (
+            atom ===
+            (updateEditorContentAtom as unknown as WritableAtom<
+              Value,
+              Args,
+              Result
+            >)
+          ) {
+            const firstArg = args[0] as { content: string };
+            updatedContent = firstArg.content;
+            return Promise.resolve({ type: "success" }) as Result;
           }
           return context.set(atom, ...args);
-        }) as any,
+        },
       };
 
       const result = await updateAntimonyModelTool.execute(
@@ -589,13 +620,23 @@ describe("Simulation Tools", () => {
       let saveCalled = false;
       const customContext: ToolContext = {
         ...context,
-        set: ((atom: any, ...args: any[]) => {
-          if (atom === saveFullProjectAtom) {
+        set: <Value, Args extends unknown[], Result>(
+          atom: WritableAtom<Value, Args, Result>,
+          ...args: Args
+        ): Result => {
+          if (
+            atom ===
+            (saveFullProjectAtom as unknown as WritableAtom<
+              Value,
+              Args,
+              Result
+            >)
+          ) {
             saveCalled = true;
-            return Promise.resolve();
+            return Promise.resolve() as Result;
           }
           return context.set(atom, ...args);
-        }) as any,
+        },
       };
 
       const result = await saveProjectTool.execute(
@@ -648,13 +689,23 @@ describe("Simulation Tools", () => {
       let simCalled = false;
       const customContext: ToolContext = {
         ...context,
-        set: ((atom: any, ...args: any[]) => {
-          if (atom === simulateTimeCourseAtom) {
+        set: <Value, Args extends unknown[], Result>(
+          atom: WritableAtom<Value, Args, Result>,
+          ...args: Args
+        ): Result => {
+          if (
+            atom ===
+            (simulateTimeCourseAtom as unknown as WritableAtom<
+              Value,
+              Args,
+              Result
+            >)
+          ) {
             simCalled = true;
-            return Promise.resolve({ type: "success" });
+            return Promise.resolve({ type: "success" }) as Result;
           }
           return context.set(atom, ...args);
-        }) as any,
+        },
       };
 
       const revertResult = await configureTimeCourseTool.revert!(
@@ -709,18 +760,31 @@ describe("Simulation Tools", () => {
       let restoredContent = "";
       const customContext: ToolContext = {
         ...context,
-        get: ((atom: any) => {
-          if (atom === editorContentAtom) return currentEditorCode;
+        get: <Value>(atom: Atom<Value>): Value => {
+          if (atom === (editorContentAtom as unknown as Atom<Value>)) {
+            return currentEditorCode as Value;
+          }
           return context.get(atom);
-        }) as any,
-        set: ((atom: any, ...args: any[]) => {
-          if (atom === updateEditorContentAtom) {
-            restoredContent = args[0].content;
-            currentEditorCode = args[0].content;
-            return Promise.resolve({ type: "success" });
+        },
+        set: <Value, Args extends unknown[], Result>(
+          atom: WritableAtom<Value, Args, Result>,
+          ...args: Args
+        ): Result => {
+          if (
+            atom ===
+            (updateEditorContentAtom as unknown as WritableAtom<
+              Value,
+              Args,
+              Result
+            >)
+          ) {
+            const firstArg = args[0] as { content: string };
+            restoredContent = firstArg.content;
+            currentEditorCode = firstArg.content;
+            return Promise.resolve({ type: "success" }) as Result;
           }
           return context.set(atom, ...args);
-        }) as any,
+        },
       };
 
       const revertData = updateAntimonyModelTool.getRevertData!(
@@ -762,13 +826,23 @@ describe("Simulation Tools", () => {
       let saveCalled = false;
       const customContext: ToolContext = {
         ...context,
-        set: ((atom: any, ...args: any[]) => {
-          if (atom === saveFullProjectAtom) {
+        set: <Value, Args extends unknown[], Result>(
+          atom: WritableAtom<Value, Args, Result>,
+          ...args: Args
+        ): Result => {
+          if (
+            atom ===
+            (saveFullProjectAtom as unknown as WritableAtom<
+              Value,
+              Args,
+              Result
+            >)
+          ) {
             saveCalled = true;
-            return Promise.resolve();
+            return Promise.resolve() as Result;
           }
           return context.set(atom, ...args);
-        }) as any,
+        },
       };
 
       const revertResult = await saveProjectTool.revert!(

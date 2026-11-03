@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
+import type { Atom, WritableAtom } from "jotai";
 import {
   getApplicationStateSnapshot,
   formatCurrentApplicationState,
@@ -24,19 +25,24 @@ import { simulationResultAtom } from "@/globals/simulation";
 import { currentRightPanelAtom, currentLeftPanelAtom } from "@/globals/layout";
 
 describe("State Snapshot and Formatter", () => {
-  let mockStore: Map<any, any>;
+  let mockStore: Map<unknown, unknown>;
   let context: ToolContext;
 
   beforeEach(() => {
     mockStore = new Map();
     context = {
-      get: (atom: any) => {
-        if (mockStore.has(atom)) return mockStore.get(atom);
-        return atom.init;
+      get: <Value>(atom: Atom<Value>): Value => {
+        if (mockStore.has(atom)) return mockStore.get(atom) as Value;
+        if ("init" in atom) return (atom as unknown as { init: Value }).init;
+        return undefined as unknown as Value;
       },
-      set: ((atom: any, ...args: any[]) => {
+      set: <Value, Args extends unknown[], Result>(
+        atom: WritableAtom<Value, Args, Result>,
+        ...args: Args
+      ): Result => {
         mockStore.set(atom, args[0]);
-      }) as any,
+        return undefined as unknown as Result;
+      },
     };
   });
 

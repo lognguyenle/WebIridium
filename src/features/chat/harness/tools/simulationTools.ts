@@ -13,6 +13,9 @@ import {
   timeCourseParametersAtom,
   parameterScanOptionsAtom,
   independentVariableAtom,
+  type EditableTimeCourseParameters,
+  type ParameterScanOptions,
+  type VariableSettings,
 } from "@/globals/settings";
 
 const ALLOWED_INDEPENDENT_VARIABLE_CATEGORIES = new Set([
@@ -39,6 +42,8 @@ import {
   simulationResultAtom,
 } from "@/globals/simulation";
 import { hasActiveProjectAtom, metadataAtom } from "@/globals/project";
+import type { SimulationOperationResult } from "@/globals/simulation";
+
 import { saveFullProjectAtom } from "@/globals/saving";
 import { currentRightPanelAtom, currentLeftPanelAtom } from "@/globals/layout";
 import {
@@ -54,7 +59,7 @@ export const configureTimeCourseTool: AgentTool = {
   describeAction: (args) =>
     `Change time course to ${args.startTime ?? 0}s-${args.endTime}s (${args.numberOfPoints ?? 100} points) and simulate`,
   describeChanges: (args, { get }): ChangeReviewDetails => {
-    const current = get(timeCourseParametersAtom) as any;
+    const current = get(timeCourseParametersAtom);
     const currentStart = current?.startTime ?? 0;
     const currentEnd = current?.endTime ?? 10;
     const currentPoints = current?.numberOfPoints ?? 100;
@@ -127,7 +132,7 @@ export const configureTimeCourseTool: AgentTool = {
     if (!get(hasActiveProjectAtom)) {
       return { success: false, message: "No active project." };
     }
-    const prev = revertData.previousSettings;
+    const prev = revertData.previousSettings as EditableTimeCourseParameters | undefined;
     if (prev) {
       set(timeCourseParametersAtom, prev);
       await set(simulateTimeCourseAtom, { resetInitialConditions: true });
@@ -209,7 +214,7 @@ export const configureTimeCourseTool: AgentTool = {
 
     // Automatically trigger the simulation with updated parameters
     try {
-      const simResult: any = await set(simulateTimeCourseAtom, {
+      const simResult = await set(simulateTimeCourseAtom, {
         resetInitialConditions: true,
       });
       if (simResult && simResult.type === "failure") {
@@ -251,7 +256,7 @@ export const configureParameterScanTool: AgentTool = {
   describeAction: (args) =>
     `Configure parameter scan on '${args.varyingParameter}' from ${args.min} to ${args.max} and run scan`,
   describeChanges: (args, { get }): ChangeReviewDetails => {
-    const current = get(parameterScanOptionsAtom) as any;
+    const current = get(parameterScanOptionsAtom);
     const currentParam = current?.varyingParameter || "None";
     const currentRange = current?.varyingParameter
       ? `${current.min} to ${current.max}`
@@ -268,7 +273,7 @@ export const configureParameterScanTool: AgentTool = {
       ? Number(args.numberOfValues)
       : currentValues;
     const newDist = args.useLogarithmicDistribution ? "Logarithmic" : "Linear";
-    const newMode = args.mode || current?.mode || "timeCourse";
+    const newMode = (typeof args.mode === "string" ? args.mode : undefined) || current?.mode || "timeCourse";
 
     return {
       summary: `Configure parameter scan on '${newParam}' from ${newMin} to ${newMax} and run scan`,
@@ -296,7 +301,7 @@ export const configureParameterScanTool: AgentTool = {
         {
           field: "Mode",
           currentValue: current?.mode || "timeCourse",
-          proposedValue: newMode,
+          proposedValue: String(newMode),
         },
       ],
       consequences: [
@@ -316,7 +321,7 @@ export const configureParameterScanTool: AgentTool = {
     if (!get(hasActiveProjectAtom)) {
       return { success: false, message: "No active project." };
     }
-    const prev = revertData.previousSettings;
+    const prev = revertData.previousSettings as ParameterScanOptions | undefined;
     if (prev) {
       set(parameterScanOptionsAtom, prev);
       await set(runParameterScanAtom);
@@ -419,16 +424,14 @@ export const configureParameterScanTool: AgentTool = {
           ? Math.round(args.numberOfValues)
           : current.numberOfValues,
       useLogarithmicDistribution,
-      mode: (args.mode === "steadyState" ? "steadyState" : "timeCourse") as
-        | "timeCourse"
-        | "steadyState",
+      mode: args.mode === "steadyState" ? ("steadyState" as const) : ("timeCourse" as const),
       useNumberList: false,
     };
 
     set(parameterScanOptionsAtom, updatedOptions);
 
     try {
-      const scanResult: any = await set(runParameterScanAtom);
+      const scanResult = await set(runParameterScanAtom);
       if (scanResult && scanResult.type === "failure") {
         return {
           success: false,
@@ -467,26 +470,29 @@ export const curatePlotDisplayTool: AgentTool = {
     "Curates which variables/species are visible on the Results plot and selects the independent X-axis variable.",
   mutatesState: true,
   describeAction: (args) => {
-    const parts = [];
-    if (args.showOnly && args.visibleSpecies?.length) {
-      parts.push(`show ONLY [${args.visibleSpecies.join(", ")}]`);
+    const visibleSpecies = Array.isArray(args.visibleSpecies) ? (args.visibleSpecies as string[]) : [];
+    const hiddenSpecies = Array.isArray(args.hiddenSpecies) ? (args.hiddenSpecies as string[]) : [];
+    const parts: string[] = [];
+    if (args.showOnly && visibleSpecies.length > 0) {
+      parts.push(`show ONLY [${visibleSpecies.join(", ")}]`);
     } else {
-      if (args.visibleSpecies?.length)
-        parts.push(`show [${args.visibleSpecies.join(", ")}]`);
-      if (args.hiddenSpecies?.length)
-        parts.push(`hide [${args.hiddenSpecies.join(", ")}]`);
+      if (visibleSpecies.length > 0)
+        parts.push(`show [${visibleSpecies.join(", ")}]`);
+      if (hiddenSpecies.length > 0)
+        parts.push(`hide [${hiddenSpecies.join(", ")}]`);
     }
-    if (args.independentAxis) parts.push(`X-axis: ${args.independentAxis}`);
+    if (args.independentAxis) parts.push(`X-axis: ${String(args.independentAxis)}`);
     return `Update plot display: ${parts.join("; ") || "modify curves"}`;
   },
   describeChanges: (args, { get }): ChangeReviewDetails => {
-    const currentSettings =
-      (get(variableSettingssAtom) as Record<string, any>) || {};
+    const currentSettings = (get(variableSettingssAtom) as Record<string, VariableSettings>) || {};
     const currentVisible = Object.entries(currentSettings)
-      .filter(([, s]) => s.visible)
+      .filter(([, s]) => Boolean(s?.visible))
       .map(([k]) => k);
     const currentAxis = (get(independentVariableAtom) as string) ?? "Time";
 
+    const visibleSpecies = Array.isArray(args.visibleSpecies) ? (args.visibleSpecies as string[]) : [];
+    const hiddenSpecies = Array.isArray(args.hiddenSpecies) ? (args.hiddenSpecies as string[]) : [];
     const changes: StateChangeItem[] = [];
     if (
       args.showOnly &&
@@ -521,7 +527,7 @@ export const curatePlotDisplayTool: AgentTool = {
 
     if (args.independentAxis && args.independentAxis !== currentAxis) {
       const rawAxis = String(args.independentAxis).trim();
-      const knownVars = (get(variablesAtom) as any[]) || [];
+      const knownVars = get(variablesAtom) || [];
       const hasCategories = knownVars.some(
         (v) => typeof v === "object" && v !== null && "category" in v,
       );
@@ -543,16 +549,16 @@ export const curatePlotDisplayTool: AgentTool = {
       });
     }
 
-    const parts = [];
-    if (args.showOnly && args.visibleSpecies?.length) {
-      parts.push(`show ONLY [${args.visibleSpecies.join(", ")}]`);
+    const parts: string[] = [];
+    if (args.showOnly && visibleSpecies.length > 0) {
+      parts.push(`show ONLY [${visibleSpecies.join(", ")}]`);
     } else {
-      if (args.visibleSpecies?.length)
-        parts.push(`show [${args.visibleSpecies.join(", ")}]`);
-      if (args.hiddenSpecies?.length)
-        parts.push(`hide [${args.hiddenSpecies.join(", ")}]`);
+      if (visibleSpecies.length > 0)
+        parts.push(`show [${visibleSpecies.join(", ")}]`);
+      if (hiddenSpecies.length > 0)
+        parts.push(`hide [${hiddenSpecies.join(", ")}]`);
     }
-    if (args.independentAxis) parts.push(`X-axis: ${args.independentAxis}`);
+    if (args.independentAxis) parts.push(`X-axis: ${String(args.independentAxis)}`);
 
     return {
       summary: `Update plot display: ${parts.join("; ") || "modify curves"}`,
@@ -578,7 +584,7 @@ export const curatePlotDisplayTool: AgentTool = {
       previousIndependentVariable: get(independentVariableAtom),
     };
   },
-  revert: async (revertData, { set, get }) => {
+  revert: (revertData, { set, get }) => {
     if (!get(hasActiveProjectAtom)) {
       return { success: false, message: "No active project." };
     }
@@ -660,60 +666,42 @@ export const curatePlotDisplayTool: AgentTool = {
     ) {
       const rawAxis = String(args.independentAxis).trim();
       const timeVarName =
-        knownVars.find(
-          (v: any) => typeof v === "object" && v?.category === "Time",
-        )?.name ?? "Time";
+        knownVars.find((v) => v.category === "Time")?.name ?? "Time";
 
-      const allowedVars = knownVars.filter((v: any) =>
-        typeof v === "object" && v !== null && "category" in v
-          ? ALLOWED_INDEPENDENT_VARIABLE_CATEGORIES.has(v.category)
-          : true,
+      const allowedVars = knownVars.filter((v) =>
+        ALLOWED_INDEPENDENT_VARIABLE_CATEGORIES.has(v.category),
       );
       const allowedNames = [
         "Time",
         ...allowedVars
-          .filter(
-            (v: any) => (typeof v === "object" ? v.category : v) !== "Time",
-          )
-          .map((v: any) => (typeof v === "string" ? v : v.name)),
+          .filter((v) => v.category !== "Time")
+          .map((v) => v.name),
       ];
 
       if (rawAxis.toLowerCase() === "time") {
         targetAxis = timeVarName;
       } else {
-        const matchedAllowed = allowedVars.find((v: any) => {
-          const name = typeof v === "string" ? v : v.name;
-          return name.toLowerCase() === rawAxis.toLowerCase();
-        });
+        const matchedAllowed = allowedVars.find(
+          (v) => v.name.toLowerCase() === rawAxis.toLowerCase(),
+        );
         if (!matchedAllowed) {
-          const matchedOther = knownVars.find((v: any) => {
-            const name = typeof v === "string" ? v : v.name;
-            return name.toLowerCase() === rawAxis.toLowerCase();
-          });
-          if (
-            matchedOther &&
-            typeof matchedOther === "object" &&
-            "category" in matchedOther
-          ) {
+          const matchedOther = knownVars.find(
+            (v) => v.name.toLowerCase() === rawAxis.toLowerCase(),
+          );
+          if (matchedOther) {
             return {
               success: false,
               message: `Variable '${rawAxis}' belongs to category '${matchedOther.category}', which cannot be selected as an independent variable. In the WebIridium GUI, only 'Time' and Floating Species can be selected as the independent X-axis variable. Available independent variables: [${allowedNames.join(", ")}]`,
               error: "INVALID_INDEPENDENT_VARIABLE",
             };
           }
-
           return {
             success: false,
-            message: `Variable '${rawAxis}' not found in model to use as independent axis. Available independent variables in GUI: [${allowedNames.join(
-              ", ",
-            )}]`,
-            error: "UNKNOWN_AXIS_VARIABLE",
+            message: `Unknown variable '${rawAxis}' for independent axis. Allowed options: [${allowedNames.join(", ")}]`,
+            error: "UNKNOWN_SPECIES",
           };
         }
-        targetAxis =
-          typeof matchedAllowed === "string"
-            ? matchedAllowed
-            : matchedAllowed.name;
+        targetAxis = matchedAllowed.name;
       }
     }
 
@@ -727,7 +715,7 @@ export const curatePlotDisplayTool: AgentTool = {
     ) {
       const resolvedVisible = new Set(
         args.visibleSpecies
-          .map((s) => findVarName(s))
+          .map((s) => findVarName(String(s)))
           .filter((s): s is string => Boolean(s)),
       );
 
@@ -742,7 +730,7 @@ export const curatePlotDisplayTool: AgentTool = {
       }
     } else {
       if (Array.isArray(args.visibleSpecies)) {
-        for (const name of args.visibleSpecies) {
+        for (const name of (args.visibleSpecies as string[])) {
           const matchedName = findVarName(name);
           if (matchedName) {
             const existing = getVariableSettingsFrom(
@@ -756,7 +744,7 @@ export const curatePlotDisplayTool: AgentTool = {
       }
 
       if (Array.isArray(args.hiddenSpecies)) {
-        for (const name of args.hiddenSpecies) {
+        for (const name of (args.hiddenSpecies as string[])) {
           const matchedName = findVarName(name);
           if (matchedName) {
             const existing = getVariableSettingsFrom(
@@ -812,9 +800,9 @@ export const runSimulationTool: AgentTool = {
   mutatesState: true,
   describeAction: (args) => `Run ${args.mode || "timeCourse"} simulation`,
   describeChanges: (args, { get }): ChangeReviewDetails => {
-    const currentResult = get(simulationResultAtom) as any;
+    const currentResult = get(simulationResultAtom);
     const currentType = currentResult ? currentResult.type : "None";
-    const targetMode = args.mode || "timeCourse";
+    const targetMode = (typeof args.mode === "string" ? args.mode : undefined) || "timeCourse";
     const sim = get(simulatorAtom);
     const simName = getSimulatorName(sim);
 
@@ -877,11 +865,11 @@ export const runSimulationTool: AgentTool = {
       };
     }
 
-    const mode = args.mode ?? "timeCourse";
+    const mode = (typeof args.mode === "string" ? args.mode : undefined) ?? "timeCourse";
     const resetInitialConditions = args.resetInitialConditions !== false;
 
     try {
-      let simResult: any;
+      let simResult: SimulationOperationResult;
       if (mode === "steadyState") {
         simResult = await set(computeSteadyStateAtom);
       } else if (mode === "parameterScan") {
@@ -959,7 +947,7 @@ export const selectSimulatorTool: AgentTool = {
     };
   },
   revert: (revertData, { set, get }) => {
-    const prev = revertData.previousSimulator;
+    const prev = String(revertData.previousSimulator || "");
     if (prev && SIMULATOR_LIST.includes(prev)) {
       set(updateSimulatorAtom, prev);
       const active = getSimulatorName(get(simulatorAtom));
@@ -1061,7 +1049,7 @@ export const updateAntimonyModelTool: AgentTool = {
   description:
     "Modifies the Antimony model code in the workbench editor (e.g. updating rate constants, adding/removing reactions, modifying species or compartment definitions). Always requires user commitment before applying.",
   mutatesState: true,
-  describeAction: (args) => args.explanation || "Update Antimony model code",
+  describeAction: (args) => (typeof args.explanation === "string" ? args.explanation : "Update Antimony model code"),
   describeChanges: (args, { get }): ChangeReviewDetails => {
     const currentCode = get(editorContentAtom) || "";
     const currentLines = currentCode.split("\n").length;
@@ -1070,12 +1058,12 @@ export const updateAntimonyModelTool: AgentTool = {
 
     return {
       summary:
-        args.explanation || `Update Antimony model code (${newLines} lines)`,
+        (typeof args.explanation === "string" ? args.explanation : `Update Antimony model code (${newLines} lines)`),
       changes: [
         {
           field: "Antimony Model Code",
           currentValue: `${currentLines} lines in editor`,
-          proposedValue: `${newLines} lines (${args.explanation || "modified equations"})`,
+          proposedValue: `${newLines} lines (${typeof args.explanation === "string" ? args.explanation : "modified equations"})`,
         },
       ],
       consequences: [
@@ -1094,7 +1082,7 @@ export const updateAntimonyModelTool: AgentTool = {
     if (!get(hasActiveProjectAtom)) {
       return { success: false, message: "No active project." };
     }
-    const prevCode = revertData.previousCode;
+    const prevCode = typeof revertData.previousCode === "string" ? revertData.previousCode : "";
     if (typeof prevCode === "string") {
       await set(updateEditorContentAtom, {
         content: prevCode,
@@ -1162,7 +1150,7 @@ export const updateAntimonyModelTool: AgentTool = {
       success: true,
       message: `Antimony model code successfully updated and recompiled: ${args.explanation || "changes applied"}.`,
       data: {
-        explanation: args.explanation,
+        explanation: typeof args.explanation === "string" ? args.explanation : undefined,
         modelLength: newCode.length,
       },
     };
@@ -1209,7 +1197,7 @@ export const saveProjectTool: AgentTool = {
     if (!get(hasActiveProjectAtom)) {
       return { success: false, message: "No active project." };
     }
-    const prevName = revertData.previousName;
+    const prevName = typeof revertData.previousName === "string" ? revertData.previousName : "";
     if (prevName) {
       const currentMeta = get(metadataAtom);
       set(metadataAtom, { ...currentMeta, name: String(prevName) });

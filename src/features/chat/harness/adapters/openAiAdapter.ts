@@ -35,12 +35,18 @@ export interface OpenAiChatCompletionResponse {
     };
     finish_reason?: string;
   }>;
+  output?: Array<{
+    type?: string;
+    content?: Array<{
+      text?: string;
+    }>;
+  }>;
 }
 
 export interface OpenAiCallResult {
   text: string;
   toolCalls: ToolCall[];
-  rawMessage: any;
+  rawMessage: OpenAiExecutionMessage;
 }
 
 export const callOpenAiApi = async (params: {
@@ -59,7 +65,7 @@ export const callOpenAiApi = async (params: {
     },
   }));
 
-  const payload: Record<string, any> = {
+  const payload: Record<string, unknown> = {
     model: params.model,
     messages: params.messages,
     max_completion_tokens: params.maxTokens ?? 2048,
@@ -84,9 +90,8 @@ export const callOpenAiApi = async (params: {
   }
 
   const data = (await resp.json()) as OpenAiChatCompletionResponse;
-  const anyData = data as any;
-  const legacyContent = anyData?.output?.find?.(
-    (i: any) => i.type === "message",
+  const legacyContent = data.output?.find(
+    (i) => i.type === "message",
   )?.content?.[0]?.text;
   const choice = data.choices?.[0];
   const message = choice?.message;
@@ -95,9 +100,9 @@ export const callOpenAiApi = async (params: {
   const parsedToolCalls: ToolCall[] = [];
 
   for (const call of rawToolCalls) {
-    let parsedArgs: Record<string, any> = {};
+    let parsedArgs: Record<string, unknown> = {};
     try {
-      parsedArgs = JSON.parse(call.function.arguments || "{}");
+      parsedArgs = JSON.parse(call.function.arguments || "{}") as Record<string, unknown>;
     } catch {
       parsedArgs = { raw: call.function.arguments };
     }
@@ -112,6 +117,6 @@ export const callOpenAiApi = async (params: {
   return {
     text: message?.content ?? legacyContent ?? "",
     toolCalls: parsedToolCalls,
-    rawMessage: message ?? anyData,
+    rawMessage: (message ?? { role: "assistant", content: "" }) as OpenAiExecutionMessage,
   };
 };

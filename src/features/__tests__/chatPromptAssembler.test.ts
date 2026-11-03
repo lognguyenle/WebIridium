@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
+import type { Atom, WritableAtom } from "jotai";
 import { assembleAgentSystemPrompt } from "../chat/harness/context/promptAssembler";
 import {
   hasActiveProjectAtom,
@@ -18,24 +19,29 @@ import { simulatorAtom } from "@/globals/simulator";
 import { type ToolContext } from "../chat/harness/types";
 
 describe("assembleAgentSystemPrompt", () => {
-  let mockState: Map<any, any>;
+  let mockStore: Map<unknown, unknown>;
   let context: ToolContext;
 
   beforeEach(() => {
-    mockState = new Map();
+    mockStore = new Map();
     context = {
-      get: (atom: any) => {
-        if (mockState.has(atom)) return mockState.get(atom);
-        return atom.init;
+      get: <Value>(atom: Atom<Value>): Value => {
+        if (mockStore.has(atom)) return mockStore.get(atom) as Value;
+        if ("init" in atom) return (atom as unknown as { init: Value }).init;
+        return undefined as unknown as Value;
       },
-      set: ((atom: any, ...args: any[]) => {
-        mockState.set(atom, args[0]);
-      }) as any,
+      set: <Value, Args extends unknown[], Result>(
+        atom: WritableAtom<Value, Args, Result>,
+        ...args: Args
+      ): Result => {
+        mockStore.set(atom, args[0]);
+        return undefined as unknown as Result;
+      },
     };
   });
 
   it("includes identity and indicates no open project when on Start screen", () => {
-    mockState.set(hasActiveProjectAtom, false);
+    mockStore.set(hasActiveProjectAtom, false);
     const prompt = assembleAgentSystemPrompt(context);
 
     expect(prompt).toContain("interactive systems biology");
@@ -52,21 +58,21 @@ describe("assembleAgentSystemPrompt", () => {
   });
 
   it("injects active project identity and live simulation state when project is open", () => {
-    mockState.set(hasActiveProjectAtom, true);
-    mockState.set(activeProjectFileAtom, "proj-repressilator-456");
-    mockState.set(metadataAtom, {
+    mockStore.set(hasActiveProjectAtom, true);
+    mockStore.set(activeProjectFileAtom, "proj-repressilator-456");
+    mockStore.set(metadataAtom, {
       name: "Repressilator Oscillation",
       versionTag: 1,
       created: 1000,
       updated: 2000,
       icon: { color: "blue" },
     });
-    mockState.set(timeCourseParametersAtom, {
+    mockStore.set(timeCourseParametersAtom, {
       startTime: 0,
       endTime: 150,
       numberOfPoints: 300,
     });
-    mockState.set(parameterScanOptionsAtom, {
+    mockStore.set(parameterScanOptionsAtom, {
       mode: "timeCourse",
       varyingParameter: null,
       min: 0,
@@ -74,8 +80,8 @@ describe("assembleAgentSystemPrompt", () => {
       numberOfValues: 10,
       useLogarithmicDistribution: false,
     });
-    mockState.set(variablesAtom, ["S1", "S2"]);
-    mockState.set(variableSettingssAtom, {
+    mockStore.set(variablesAtom, ["S1", "S2"]);
+    mockStore.set(variableSettingssAtom, {
       S1: {
         displayName: "S1",
         visible: true,
@@ -91,7 +97,7 @@ describe("assembleAgentSystemPrompt", () => {
         lineStyle: "solid",
       },
     });
-    mockState.set(simulatorAtom, { name: "COPASI" });
+    mockStore.set(simulatorAtom, { name: "COPASI" });
 
     const prompt = assembleAgentSystemPrompt(context);
 
@@ -109,18 +115,18 @@ describe("assembleAgentSystemPrompt", () => {
   });
 
   it("injects active project model code into system instructions", () => {
-    mockState.set(hasActiveProjectAtom, true);
-    mockState.set(metadataAtom, { name: "Repressilator" });
-    mockState.set(editorContentAtom, "S1 -> S2; k1*S1\nk1 = 0.5");
-    mockState.set(timeCourseParametersAtom, {
+    mockStore.set(hasActiveProjectAtom, true);
+    mockStore.set(metadataAtom, { name: "Repressilator" });
+    mockStore.set(editorContentAtom, "S1 -> S2; k1*S1\nk1 = 0.5");
+    mockStore.set(timeCourseParametersAtom, {
       startTime: 0,
       endTime: 20,
       numberOfPoints: 200,
     });
-    mockState.set(parameterScanOptionsAtom, { mode: "timeCourse" });
-    mockState.set(variablesAtom, []);
-    mockState.set(variableSettingssAtom, {});
-    mockState.set(simulatorAtom, {});
+    mockStore.set(parameterScanOptionsAtom, { mode: "timeCourse" });
+    mockStore.set(variablesAtom, []);
+    mockStore.set(variableSettingssAtom, {});
+    mockStore.set(simulatorAtom, {});
 
     const prompt = assembleAgentSystemPrompt(context);
 

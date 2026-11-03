@@ -235,11 +235,8 @@ describe("ChatPanel", () => {
       "Response with detailed content to scroll through.",
     );
 
-    const chatRegion = screen.getByRole("region", { name: "Chat panel" });
-    const messagesEl = chatRegion.querySelector(
-      "[class*='messages']",
-    ) as HTMLDivElement;
-    expect(messagesEl).toBeTruthy();
+    const messagesEl = screen.getByTestId("chat-messages-container");
+    expect(messagesEl).toBeInTheDocument();
 
     // Simulate user scrolling down into the message history
     Object.defineProperty(messagesEl, "scrollTop", {
@@ -305,11 +302,11 @@ describe("ChatPanel", () => {
       expect(
         screen.getByText("Help me model Michaelis-Menten kinetics"),
       ).toBeInTheDocument();
-      expect(
-        screen.getByText("Here is the Antimony model for enzyme kinetics"),
-      ).toBeInTheDocument();
-      expect(screen.getByLabelText("Message input")).toBeInTheDocument();
     });
+    expect(
+      screen.getByText("Here is the Antimony model for enzyme kinetics"),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText("Message input")).toBeInTheDocument();
 
     // Clicking All Chats button in header returns to the startup page
     await userEvent.click(
@@ -318,12 +315,12 @@ describe("ChatPanel", () => {
 
     await waitFor(() => {
       expect(screen.getByText("New Conversation")).toBeInTheDocument();
-      expect(screen.getByText("Past Conversations")).toBeInTheDocument();
-      expect(
-        screen.getByText("Enzyme Kinetics Discussion"),
-      ).toBeInTheDocument();
-      expect(screen.queryByLabelText("Message input")).not.toBeInTheDocument();
     });
+    expect(screen.getByText("Past Conversations")).toBeInTheDocument();
+    expect(
+      screen.getByText("Enzyme Kinetics Discussion"),
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText("Message input")).not.toBeInTheDocument();
   });
 
   it("displays placeholder and focuses input when clicking New Conversation in empty view without history", async () => {
@@ -374,9 +371,9 @@ describe("ChatPanel", () => {
       expect(
         screen.queryByText("Welcome to WebIridium AI"),
       ).not.toBeInTheDocument();
-      expect(screen.getByText("New Conversation")).toBeInTheDocument();
-      expect(screen.queryByLabelText("Message input")).not.toBeInTheDocument();
     });
+    expect(screen.getByText("New Conversation")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Message input")).not.toBeInTheDocument();
 
     // Clicking New Conversation navigates to chat page where input is rendered
     await userEvent.click(
@@ -419,10 +416,10 @@ describe("ChatPanel", () => {
 
     await waitFor(() => {
       expect(screen.getByText("Show steady state")).toBeInTheDocument();
-      expect(
-        screen.getByText("Steady state reached at t=10"),
-      ).toBeInTheDocument();
     });
+    expect(
+      screen.getByText("Steady state reached at t=10"),
+    ).toBeInTheDocument();
   });
 
   it("does not render chatbox on startup page and opens new chat page with input and empty state", async () => {
@@ -441,13 +438,10 @@ describe("ChatPanel", () => {
     );
 
     // On new conversation page: centered chatbox and new chat empty state are visible, NOT bottom chatbox
-    const chatRegion = screen.getByRole("region", { name: "Chat panel" });
-    const centerWrapper = chatRegion.querySelector(
-      "[class*='newChatCenterWrapper']",
-    );
+    const centerWrapper = screen.getByTestId("new-chat-center-wrapper");
     expect(centerWrapper).toBeInTheDocument();
     expect(
-      within(centerWrapper as HTMLElement).getByLabelText("Message input"),
+      within(centerWrapper).getByLabelText("Message input"),
     ).toBeInTheDocument();
     expect(
       screen.getByText(
@@ -516,16 +510,16 @@ describe("ChatPanel", () => {
     // Verify committed action record details are rendered
     await waitFor(() => {
       expect(screen.getByText("Committed Action")).toBeInTheDocument();
-      expect(screen.getByText("configure_time_course")).toBeInTheDocument();
-      expect(
-        screen.getByText("Configure time course simulation to 50s"),
-      ).toBeInTheDocument();
-      expect(screen.getByText("End Time")).toBeInTheDocument();
-      expect(screen.getByText("50")).toBeInTheDocument();
-      expect(
-        screen.getByRole("button", { name: /revert change/i }),
-      ).toBeInTheDocument();
     });
+    expect(screen.getByText("configure_time_course")).toBeInTheDocument();
+    expect(
+      screen.getByText("Configure time course simulation to 50s"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("End Time")).toBeInTheDocument();
+    expect(screen.getByText("50")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /revert change/i }),
+    ).toBeInTheDocument();
 
     // Click Revert Change
     await userEvent.click(
@@ -535,13 +529,19 @@ describe("ChatPanel", () => {
     // Verify status changes to Reverted and Re-apply button appears
     await waitFor(() => {
       expect(screen.getByText("Reverted Action")).toBeInTheDocument();
-      expect(
-        screen.getByRole("button", { name: /re-apply change/i }),
-      ).toBeInTheDocument();
     });
+    expect(
+      screen.getByRole("button", { name: /re-apply change/i }),
+    ).toBeInTheDocument();
 
     // Check localStorage was updated with reverted status
-    const saved = JSON.parse(localStorage.getItem("chat_history") || "[]");
+    const saved = JSON.parse(
+      localStorage.getItem("chat_history") || "[]",
+    ) as Array<{
+      messages?: Array<{
+        committedActions?: Array<{ status: string }>;
+      }>;
+    }>;
     const savedAction = saved[0]?.messages?.[1]?.committedActions?.[0];
     expect(savedAction?.status).toBe("reverted");
 
@@ -553,9 +553,9 @@ describe("ChatPanel", () => {
     // Verify status returns to Committed
     await waitFor(() => {
       expect(screen.getByText("Committed Action")).toBeInTheDocument();
-      expect(
-        screen.getByRole("button", { name: /revert change/i }),
-      ).toBeInTheDocument();
     });
+    expect(
+      screen.getByRole("button", { name: /revert change/i }),
+    ).toBeInTheDocument();
   });
 });
