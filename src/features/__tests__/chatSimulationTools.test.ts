@@ -214,7 +214,7 @@ describe("Simulation Tools", () => {
       expect(store.get(independentVariableAtom)).toBe("S1");
     });
 
-    it("rejects selecting variables from invalid categories (e.g. Parameters) as independent axis", async () => {
+    it("rejects selecting variables from invalid categories (e.g. Parameters) as independent axis without mutating curves", async () => {
       mockVariables = [
         { name: "Time", category: "Time" },
         { name: "S1", category: "Floating Species" },
@@ -238,13 +238,17 @@ describe("Simulation Tools", () => {
       });
 
       const result = await curatePlotDisplayTool.execute(
-        { independentAxis: "k1" },
+        { visibleSpecies: ["k1"], independentAxis: "k1" },
         context,
       );
 
       expect(result.success).toBe(false);
       expect(result.error).toBe("INVALID_INDEPENDENT_VARIABLE");
       expect(result.message).toContain("category 'Parameters'");
+      // Ensure variableSettingssAtom was NOT mutated
+      const settings = store.get(variableSettingssAtom);
+      expect(settings["k1"].visible).toBe(false);
+      expect(settings["S1"].visible).toBe(true);
     });
 
     it("resets independent axis to Time when Time is specified", async () => {
@@ -660,6 +664,30 @@ describe("Simulation Tools", () => {
       expect(revertResult.success).toBe(true);
       expect(store.get(timeCourseParametersAtom).endTime).toBe(10);
       expect(simCalled).toBe(true);
+    });
+
+    it("captures revertData and restores independent axis even when previously null", async () => {
+      store.set(independentVariableAtom, null);
+      store.set(variableSettingssAtom, {
+        S1: { displayName: "S1", visible: true, color: "blue", width: 2, lineStyle: "solid" },
+      });
+
+      const revertData = curatePlotDisplayTool.getRevertData!(
+        { independentAxis: "S1" },
+        context,
+      );
+      expect(revertData.previousIndependentVariable).toBeNull();
+
+      // Apply change
+      store.set(independentVariableAtom, "S1");
+      expect(store.get(independentVariableAtom)).toBe("S1");
+
+      const revertResult = await curatePlotDisplayTool.revert!(
+        revertData,
+        context,
+      );
+      expect(revertResult.success).toBe(true);
+      expect(store.get(independentVariableAtom)).toBeNull();
     });
 
     it("captures revertData and restores simulator backend", async () => {

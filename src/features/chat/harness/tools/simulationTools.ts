@@ -585,8 +585,11 @@ export const curatePlotDisplayTool: AgentTool = {
     if (revertData.previousSettings) {
       set(variableSettingssAtom, revertData.previousSettings);
     }
-    if (revertData.previousIndependentVariable) {
-      set(independentVariableAtom, revertData.previousIndependentVariable);
+    if ("previousIndependentVariable" in revertData) {
+      set(
+        independentVariableAtom,
+        revertData.previousIndependentVariable ?? null,
+      );
     }
     set(currentRightPanelAtom, "Results");
     return {
@@ -648,6 +651,73 @@ export const curatePlotDisplayTool: AgentTool = {
       );
     };
 
+    // 1. Validate independent axis upfront BEFORE modifying any state
+    let targetAxis: string | undefined;
+    if (
+      args.independentAxis !== undefined &&
+      args.independentAxis !== null &&
+      args.independentAxis !== ""
+    ) {
+      const rawAxis = String(args.independentAxis).trim();
+      const timeVarName =
+        knownVars.find(
+          (v: any) => typeof v === "object" && v?.category === "Time",
+        )?.name ?? "Time";
+
+      const allowedVars = knownVars.filter((v: any) =>
+        typeof v === "object" && v !== null && "category" in v
+          ? ALLOWED_INDEPENDENT_VARIABLE_CATEGORIES.has(v.category)
+          : true,
+      );
+      const allowedNames = [
+        "Time",
+        ...allowedVars
+          .filter(
+            (v: any) => (typeof v === "object" ? v.category : v) !== "Time",
+          )
+          .map((v: any) => (typeof v === "string" ? v : v.name)),
+      ];
+
+      if (rawAxis.toLowerCase() === "time") {
+        targetAxis = timeVarName;
+      } else {
+        const matchedAllowed = allowedVars.find((v: any) => {
+          const name = typeof v === "string" ? v : v.name;
+          return name.toLowerCase() === rawAxis.toLowerCase();
+        });
+        if (!matchedAllowed) {
+          const matchedOther = knownVars.find((v: any) => {
+            const name = typeof v === "string" ? v : v.name;
+            return name.toLowerCase() === rawAxis.toLowerCase();
+          });
+          if (
+            matchedOther &&
+            typeof matchedOther === "object" &&
+            "category" in matchedOther
+          ) {
+            return {
+              success: false,
+              message: `Variable '${rawAxis}' belongs to category '${matchedOther.category}', which cannot be selected as an independent variable. In the WebIridium GUI, only 'Time' and Floating Species can be selected as the independent X-axis variable. Available independent variables: [${allowedNames.join(", ")}]`,
+              error: "INVALID_INDEPENDENT_VARIABLE",
+            };
+          }
+
+          return {
+            success: false,
+            message: `Variable '${rawAxis}' not found in model to use as independent axis. Available independent variables in GUI: [${allowedNames.join(
+              ", ",
+            )}]`,
+            error: "UNKNOWN_AXIS_VARIABLE",
+          };
+        }
+        targetAxis =
+          typeof matchedAllowed === "string"
+            ? matchedAllowed
+            : matchedAllowed.name;
+      }
+    }
+
+    // 2. Compute updated variable visibility settings
     let changed = false;
 
     if (
@@ -700,75 +770,12 @@ export const curatePlotDisplayTool: AgentTool = {
       }
     }
 
+    // 3. All validations passed; apply state mutations atomically
     if (changed) {
       set(variableSettingssAtom, updatedSettings);
     }
 
-    // Only modify the independent axis if explicitly and deliberately provided
-    if (
-      args.independentAxis !== undefined &&
-      args.independentAxis !== null &&
-      args.independentAxis !== ""
-    ) {
-      const rawAxis = String(args.independentAxis).trim();
-      const timeVarName =
-        knownVars.find(
-          (v: any) => typeof v === "object" && v?.category === "Time",
-        )?.name ?? "Time";
-
-      const allowedVars = knownVars.filter((v: any) =>
-        typeof v === "object" && v !== null && "category" in v
-          ? ALLOWED_INDEPENDENT_VARIABLE_CATEGORIES.has(v.category)
-          : true,
-      );
-      const allowedNames = [
-        "Time",
-        ...allowedVars
-          .filter(
-            (v: any) => (typeof v === "object" ? v.category : v) !== "Time",
-          )
-          .map((v: any) => (typeof v === "string" ? v : v.name)),
-      ];
-
-      let targetAxis: string;
-      if (rawAxis.toLowerCase() === "time") {
-        targetAxis = timeVarName;
-      } else {
-        const matchedAllowed = allowedVars.find((v: any) => {
-          const name = typeof v === "string" ? v : v.name;
-          return name.toLowerCase() === rawAxis.toLowerCase();
-        });
-        if (!matchedAllowed) {
-          const matchedOther = knownVars.find((v: any) => {
-            const name = typeof v === "string" ? v : v.name;
-            return name.toLowerCase() === rawAxis.toLowerCase();
-          });
-          if (
-            matchedOther &&
-            typeof matchedOther === "object" &&
-            "category" in matchedOther
-          ) {
-            return {
-              success: false,
-              message: `Variable '${rawAxis}' belongs to category '${matchedOther.category}', which cannot be selected as an independent variable. In the WebIridium GUI, only 'Time' and Floating Species can be selected as the independent X-axis variable. Available independent variables: [${allowedNames.join(", ")}]`,
-              error: "INVALID_INDEPENDENT_VARIABLE",
-            };
-          }
-
-          return {
-            success: false,
-            message: `Variable '${rawAxis}' not found in model to use as independent axis. Available independent variables in GUI: [${allowedNames.join(
-              ", ",
-            )}]`,
-            error: "UNKNOWN_AXIS_VARIABLE",
-          };
-        }
-        targetAxis =
-          typeof matchedAllowed === "string"
-            ? matchedAllowed
-            : matchedAllowed.name;
-      }
-
+    if (targetAxis !== undefined) {
       set(independentVariableAtom, targetAxis);
     }
 
