@@ -35,7 +35,9 @@ describe("addVariablePresetsToModel", () => {
         PRESETS,
       );
       expect(result.replace(/\r\n/g, "\n")).toBe(normalizedExpected);
-      expect(result.replace(/\r\n/g, "\n").split("\n")[line]).toMatch(COMMENT_REGEX);
+      expect(result.replace(/\r\n/g, "\n").split("\n")[line]).toMatch(
+        COMMENT_REGEX,
+      );
     });
   }
 });

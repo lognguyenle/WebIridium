@@ -90,9 +90,8 @@ export const callOpenAiApi = async (params: {
   }
 
   const data = (await resp.json()) as OpenAiChatCompletionResponse;
-  const legacyContent = data.output?.find(
-    (i) => i.type === "message",
-  )?.content?.[0]?.text;
+  const legacyContent = data.output?.find((i) => i.type === "message")
+    ?.content?.[0]?.text;
   const choice = data.choices?.[0];
   const message = choice?.message;
 
@@ -102,7 +101,10 @@ export const callOpenAiApi = async (params: {
   for (const call of rawToolCalls) {
     let parsedArgs: Record<string, unknown> = {};
     try {
-      parsedArgs = JSON.parse(call.function.arguments || "{}") as Record<string, unknown>;
+      parsedArgs = JSON.parse(call.function.arguments || "{}") as Record<
+        string,
+        unknown
+      >;
     } catch {
       parsedArgs = { raw: call.function.arguments };
     }
@@ -117,6 +119,9 @@ export const callOpenAiApi = async (params: {
   return {
     text: message?.content ?? legacyContent ?? "",
     toolCalls: parsedToolCalls,
-    rawMessage: (message ?? { role: "assistant", content: "" }) as OpenAiExecutionMessage,
+    rawMessage: (message ?? {
+      role: "assistant",
+      content: "",
+    }) as OpenAiExecutionMessage,
   };
 };

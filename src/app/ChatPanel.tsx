@@ -681,28 +681,31 @@ const ChatPanel = ({ visible }: ChatPanelProps) => {
   const lastHandledCompletedIdRef = useRef<string | null>(null);
   const isRestoringScrollRef = useRef(false);
 
-  const scrollToLastResponseTop = useCallback((smooth = true) => {
-    const el = messagesRef.current;
-    if (!el) return;
-    requestAnimationFrame(() => {
-      const lastMessageEl = el.lastElementChild;
-      if (lastMessageEl) {
-        const targetTop = lastMessageEl.getBoundingClientRect().top;
-        const containerTop = el.getBoundingClientRect().top;
-        const scrollTop = targetTop - containerTop + el.scrollTop;
-        if (smooth && el.scrollTo) {
-          el.scrollTo({ top: scrollTop, behavior: "smooth" });
-        } else if (el.scrollTo) {
-          el.scrollTo({ top: scrollTop, behavior: "instant" });
-        } else {
-          el.scrollTop = scrollTop;
+  const scrollToLastResponseTop = useCallback(
+    (smooth = true) => {
+      const el = messagesRef.current;
+      if (!el) return;
+      requestAnimationFrame(() => {
+        const lastMessageEl = el.lastElementChild;
+        if (lastMessageEl) {
+          const targetTop = lastMessageEl.getBoundingClientRect().top;
+          const containerTop = el.getBoundingClientRect().top;
+          const scrollTop = targetTop - containerTop + el.scrollTop;
+          if (smooth && el.scrollTo) {
+            el.scrollTo({ top: scrollTop, behavior: "smooth" });
+          } else if (el.scrollTo) {
+            el.scrollTo({ top: scrollTop, behavior: "instant" });
+          } else {
+            el.scrollTop = scrollTop;
+          }
+          savedScrollTopRef.current = scrollTop;
+          const currentConvKey = activeConversation?.id ?? "__active__";
+          conversationScrollPositionsRef.current.set(currentConvKey, scrollTop);
         }
-        savedScrollTopRef.current = scrollTop;
-        const currentConvKey = activeConversation?.id ?? "__active__";
-        conversationScrollPositionsRef.current.set(currentConvKey, scrollTop);
-      }
-    });
-  }, [activeConversation?.id]);
+      });
+    },
+    [activeConversation?.id],
+  );
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     if (!visibleRef.current || isRestoringScrollRef.current) return;
@@ -1147,7 +1150,9 @@ const ChatPanel = ({ visible }: ChatPanelProps) => {
                 thinking: false,
                 isError: true,
                 debugInfo: {
-                  provider: isClaude ? ("anthropic" as const) : ("openai" as const),
+                  provider: isClaude
+                    ? ("anthropic" as const)
+                    : ("openai" as const),
                   model,
                   systemPrompt: assembleAgentSystemPrompt(toolContext, {
                     userSystemPrompt: systemPrompt,

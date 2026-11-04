@@ -49,12 +49,36 @@ export const AVAILABLE_MODELS = [
   { id: "o4-mini", name: "o4-mini ($$)", provider: "openai" },
 
   // Anthropic
-  { id: "claude-haiku-5-5", name: "Claude 5.5 Haiku ($)", provider: "anthropic" },
-  { id: "claude-fable-5-1", name: "Claude 5.1 Fable ($$)", provider: "anthropic" },
-  { id: "claude-sonnet-4-6", name: "Claude 4.6 Sonnet ($$$)", provider: "anthropic" },
-  { id: "claude-sonnet-5-5", name: "Claude 5.5 Sonnet ($$$)", provider: "anthropic" },
-  { id: "claude-opus-4-6", name: "Claude 4.6 Opus ($$$$)", provider: "anthropic" },
-  { id: "claude-opus-5-5", name: "Claude 5.5 Opus ($$$$$)", provider: "anthropic" },
+  {
+    id: "claude-haiku-5-5",
+    name: "Claude 5.5 Haiku ($)",
+    provider: "anthropic",
+  },
+  {
+    id: "claude-fable-5-1",
+    name: "Claude 5.1 Fable ($$)",
+    provider: "anthropic",
+  },
+  {
+    id: "claude-sonnet-4-6",
+    name: "Claude 4.6 Sonnet ($$$)",
+    provider: "anthropic",
+  },
+  {
+    id: "claude-sonnet-5-5",
+    name: "Claude 5.5 Sonnet ($$$)",
+    provider: "anthropic",
+  },
+  {
+    id: "claude-opus-4-6",
+    name: "Claude 4.6 Opus ($$$$)",
+    provider: "anthropic",
+  },
+  {
+    id: "claude-opus-5-5",
+    name: "Claude 5.5 Opus ($$$$$)",
+    provider: "anthropic",
+  },
 ];
 
 export const modelAtom = atom<string>("gpt-5.4-mini");

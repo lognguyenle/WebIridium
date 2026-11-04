@@ -44,7 +44,9 @@ export interface OrchestratorParams {
   onConfirmAction?: (request: ConfirmationRequest) => Promise<boolean>;
 }
 
-export const getJotaiToolContext = (customStore?: ReturnType<typeof getDefaultStore>): ToolContext => {
+export const getJotaiToolContext = (
+  customStore?: ReturnType<typeof getDefaultStore>,
+): ToolContext => {
   const store = customStore ?? getDefaultStore();
   return {
     get: (atom) => store.get(atom),

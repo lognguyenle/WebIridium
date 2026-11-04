@@ -115,11 +115,12 @@ export const getApplicationStateSnapshot = (
 
   const rawSim = context.get(simulatorAtom);
   const simulatorName = resolveSimulatorName(rawSim);
-  const canRunSteadyState = (rawSim as { capabilities?: { canRunSteadyState?: boolean } } | null)?.capabilities?.canRunSteadyState ?? true;
+  const canRunSteadyState =
+    (rawSim as { capabilities?: { canRunSteadyState?: boolean } } | null)
+      ?.capabilities?.canRunSteadyState ?? true;
 
   const resultsViewOpen = context.get(currentRightPanelAtom) === "Results";
-  const activeLeftPanel =
-    context.get(currentLeftPanelAtom) ?? null;
+  const activeLeftPanel = context.get(currentLeftPanelAtom) ?? null;
 
   const rawTimeCourse = context.get(timeCourseParametersAtom);
   const timeCourse = {
@@ -137,7 +138,10 @@ export const getApplicationStateSnapshot = (
 
   const rawScan = context.get(parameterScanOptionsAtom);
   const parameterScan = {
-    mode: rawScan?.mode === "steadyState" ? ("steadyState" as const) : ("timeCourse" as const),
+    mode:
+      rawScan?.mode === "steadyState"
+        ? ("steadyState" as const)
+        : ("timeCourse" as const),
     varyingParameter: rawScan?.varyingParameter ?? null,
     min: typeof rawScan?.min === "number" ? rawScan.min : 0,
     max: typeof rawScan?.max === "number" ? rawScan.max : 10,
@@ -146,11 +150,16 @@ export const getApplicationStateSnapshot = (
     useLogarithmicDistribution: Boolean(rawScan?.useLogarithmicDistribution),
   };
 
-  const rawVars = (context.get(variablesAtom) || []) as Array<Variable | string | { name?: string; category?: string }>;
+  const rawVars = (context.get(variablesAtom) || []) as Array<
+    Variable | string | { name?: string; category?: string }
+  >;
   const varNamesFromVars = rawVars
     .map((v) => (typeof v === "string" ? v : v.name || ""))
     .filter(Boolean);
-  const rawSettings = (context.get(variableSettingssAtom) || {}) as Record<string, VariableSettings | undefined>;
+  const rawSettings = (context.get(variableSettingssAtom) || {}) as Record<
+    string,
+    VariableSettings | undefined
+  >;
   const allPlottableVariables: string[] = Array.from(
     new Set([...varNamesFromVars, ...Object.keys(rawSettings)]),
   );
@@ -226,10 +235,15 @@ export const getApplicationStateSnapshot = (
     }
   }
 
-  const rawModelStatus = context.get(modelStatusAtom) as ModelStatus | undefined;
+  const rawModelStatus = context.get(modelStatusAtom) as
+    | ModelStatus
+    | undefined;
   const modelStatus = {
-    status: (rawModelStatus?.type ?? "success"),
-    statusMessage: rawModelStatus && "message" in rawModelStatus ? rawModelStatus.message : null,
+    status: rawModelStatus?.type ?? "success",
+    statusMessage:
+      rawModelStatus && "message" in rawModelStatus
+        ? rawModelStatus.message
+        : null,
     code: options.includeModelCode
       ? context.get(editorContentAtom) || ""
       : undefined,

@@ -39,7 +39,10 @@ describe("Simulation Tools", () => {
   beforeEach(() => {
     store = createStore();
     mockVariables = [];
-    store.set(activeProjectFileAtom, "mock-project-123" as unknown as ProjectId);
+    store.set(
+      activeProjectFileAtom,
+      "mock-project-123" as unknown as ProjectId,
+    );
     mockSimulateTimeCourse = vi.fn().mockResolvedValue({ type: "success" });
 
     context = {
@@ -720,7 +723,13 @@ describe("Simulation Tools", () => {
     it("captures revertData and restores independent axis even when previously null", async () => {
       store.set(independentVariableAtom, null);
       store.set(variableSettingssAtom, {
-        S1: { displayName: "S1", visible: true, color: "blue", width: 2, lineStyle: "solid" },
+        S1: {
+          displayName: "S1",
+          visible: true,
+          color: "blue",
+          width: 2,
+          lineStyle: "solid",
+        },
       });
 
       const revertData = curatePlotDisplayTool.getRevertData!(

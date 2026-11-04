@@ -317,9 +317,7 @@ describe("ChatPanel", () => {
       expect(screen.getByText("New Conversation")).toBeInTheDocument();
     });
     expect(screen.getByText("Past Conversations")).toBeInTheDocument();
-    expect(
-      screen.getByText("Enzyme Kinetics Discussion"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Enzyme Kinetics Discussion")).toBeInTheDocument();
     expect(screen.queryByLabelText("Message input")).not.toBeInTheDocument();
   });
 
