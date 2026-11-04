@@ -22,13 +22,18 @@ import {
   variablesAtom,
   editorContentAtom,
 } from "@/globals/model";
-import { simulatorAtom, getSimulatorName } from "@/globals/simulator";
+import {
+  simulatorAtom,
+  getSimulatorName,
+  updateSimulatorAtom,
+} from "@/globals/simulator";
 import { activeProjectFileAtom, metadataAtom } from "@/globals/project";
 import type { ProjectId } from "@/features/savedData";
 import { currentRightPanelAtom } from "@/globals/layout";
 import {
   simulateTimeCourseAtom,
   runParameterScanAtom,
+  computeSteadyStateAtom,
 } from "@/globals/simulation";
 import { saveFullProjectAtom } from "@/globals/saving";
 import { type ToolContext } from "../chat/harness/types";
@@ -38,6 +43,7 @@ describe("Simulation Tools", () => {
   let context: ToolContext;
   let mockSimulateTimeCourse: ReturnType<typeof vi.fn>;
   let mockRunParameterScan: ReturnType<typeof vi.fn>;
+  let mockComputeSteadyState: ReturnType<typeof vi.fn>;
   let mockVariables: Array<{
     name: string;
     category?: string;
@@ -53,6 +59,7 @@ describe("Simulation Tools", () => {
     );
     mockSimulateTimeCourse = vi.fn().mockResolvedValue({ type: "success" });
     mockRunParameterScan = vi.fn().mockResolvedValue({ type: "success" });
+    mockComputeSteadyState = vi.fn().mockResolvedValue({ type: "success" });
 
     context = {
       get: <Value>(atom: Atom<Value>): Value => {
@@ -83,6 +90,16 @@ describe("Simulation Tools", () => {
           (runParameterScanAtom as unknown as WritableAtom<Value, Args, Result>)
         ) {
           return (mockRunParameterScan as (...a: Args) => Result)(...args);
+        }
+        if (
+          atom ===
+          (computeSteadyStateAtom as unknown as WritableAtom<
+            Value,
+            Args,
+            Result
+          >)
+        ) {
+          return (mockComputeSteadyState as (...a: Args) => Result)(...args);
         }
         return store.set(atom, ...args);
       },
@@ -173,6 +190,61 @@ describe("Simulation Tools", () => {
       expect(result.success).toBe(false);
       expect(result.error).toBe("SIMULATION_FAILED");
       expect(result.message).toContain("Singular matrix");
+    });
+
+    it("runs steadyState simulation when active simulator supports steady state (COPASI)", async () => {
+      store.set(updateSimulatorAtom, "COPASI");
+
+      const result = await runSimulationTool.execute(
+        { mode: "steadyState" },
+        context,
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.message).toContain(
+        "Steady-state computation completed successfully",
+      );
+      expect(mockComputeSteadyState).toHaveBeenCalledTimes(1);
+      expect(store.get(currentRightPanelAtom)).toBe("Results");
+    });
+
+    it("rejects steadyState simulation when active simulator does not support steady state (libsbmlsim)", async () => {
+      store.set(updateSimulatorAtom, "libsbmlsim");
+
+      const result = await runSimulationTool.execute(
+        { mode: "steadyState" },
+        context,
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("STEADY_STATE_UNSUPPORTED");
+      expect(result.message).toContain(
+        "The active simulator 'libsbmlsim' does not support steady-state computation",
+      );
+      expect(result.message).toContain(
+        "Switch to COPASI or RoadRunner (Server)",
+      );
+      expect(mockComputeSteadyState).not.toHaveBeenCalled();
+    });
+
+    it("rejects parameterScan in steadyState mode when active simulator does not support steady state (libsbmlsim)", async () => {
+      store.set(updateSimulatorAtom, "libsbmlsim");
+      store.set(parameterScanOptionsAtom, {
+        ...store.get(parameterScanOptionsAtom),
+        mode: "steadyState",
+      });
+
+      const result = await runSimulationTool.execute(
+        { mode: "parameterScan" },
+        context,
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("STEADY_STATE_UNSUPPORTED");
+      expect(result.message).toContain(
+        "The active simulator 'libsbmlsim' does not support steady-state parameter scans",
+      );
+      expect(mockRunParameterScan).not.toHaveBeenCalled();
     });
   });
 
@@ -1048,6 +1120,33 @@ describe("Simulation Tools", () => {
       expect(result.message).toContain("is not settable for parameter scans");
       expect(result.message).toContain("Valid settable parameters: [k1]");
       // Ensure state was not mutated
+      expect(store.get(parameterScanOptionsAtom)).toEqual(prev);
+      expect(mockRunParameterScan).not.toHaveBeenCalled();
+    });
+
+    it("should reject configureParameterScanTool in steadyState mode when simulator does not support steady state (libsbmlsim)", async () => {
+      store.set(updateSimulatorAtom, "libsbmlsim");
+      mockVariables = [
+        { name: "k1", category: "Parameters", type: "settable" },
+      ];
+
+      const prev = store.get(parameterScanOptionsAtom);
+
+      const result = await configureParameterScanTool.execute(
+        {
+          varyingParameter: "k1",
+          min: 1,
+          max: 10,
+          mode: "steadyState",
+        },
+        context,
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("STEADY_STATE_UNSUPPORTED");
+      expect(result.message).toContain(
+        "The active simulator 'libsbmlsim' does not support steady-state computation",
+      );
       expect(store.get(parameterScanOptionsAtom)).toEqual(prev);
       expect(mockRunParameterScan).not.toHaveBeenCalled();
     });

@@ -462,6 +462,17 @@ export const configureParameterScanTool: AgentTool = {
       };
     }
 
+    const sim = get(simulatorAtom);
+    const simName = getSimulatorName(sim);
+
+    if (args.mode === "steadyState" && !sim.capabilities.canRunSteadyState) {
+      return {
+        success: false,
+        error: "STEADY_STATE_UNSUPPORTED",
+        message: `The active simulator '${simName}' does not support steady-state computation. Switch to COPASI or RoadRunner (Server) using 'select_simulator'.`,
+      };
+    }
+
     const updatedOptions = {
       ...current,
       varyingParameter: paramName,
@@ -933,6 +944,11 @@ export const runSimulationTool: AgentTool = {
         `Executes ${targetMode} ODE simulation via ${simName}.`,
         "Updates simulation results in memory.",
         "Opens Results plot view to display trajectories.",
+        ...(!sim.capabilities.canRunSteadyState && targetMode === "steadyState"
+          ? [
+              `WARNING: Active simulator '${simName}' does not support steady-state computation.`,
+            ]
+          : []),
       ],
     };
   },
@@ -969,6 +985,31 @@ export const runSimulationTool: AgentTool = {
     const mode =
       (typeof args.mode === "string" ? args.mode : undefined) ?? "timeCourse";
     const resetInitialConditions = args.resetInitialConditions !== false;
+
+    const sim = get(simulatorAtom);
+    const simName = getSimulatorName(sim);
+
+    if (mode === "steadyState" && !sim.capabilities.canRunSteadyState) {
+      return {
+        success: false,
+        error: "STEADY_STATE_UNSUPPORTED",
+        message: `The active simulator '${simName}' does not support steady-state computation. Switch to COPASI or RoadRunner (Server) using 'select_simulator'.`,
+      };
+    }
+
+    if (mode === "parameterScan") {
+      const scanOptions = get(parameterScanOptionsAtom);
+      if (
+        scanOptions.mode === "steadyState" &&
+        !sim.capabilities.canRunSteadyState
+      ) {
+        return {
+          success: false,
+          error: "STEADY_STATE_UNSUPPORTED",
+          message: `The active simulator '${simName}' does not support steady-state parameter scans. Switch to COPASI or RoadRunner (Server) using 'select_simulator'.`,
+        };
+      }
+    }
 
     try {
       let simResult: SimulationOperationResult;
