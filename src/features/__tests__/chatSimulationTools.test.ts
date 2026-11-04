@@ -295,6 +295,94 @@ describe("Simulation Tools", () => {
       expect(store.get(independentVariableAtom)).toBe("Time");
     });
 
+    it("rejects curatePlotDisplayTool when visibleSpecies contains unknown species without mutating curves", async () => {
+      store.set(variableSettingssAtom, {
+        S1: {
+          displayName: "S1",
+          visible: true,
+          color: "blue",
+          width: 2,
+          lineStyle: "solid",
+        },
+        S2: {
+          displayName: "S2",
+          visible: true,
+          color: "red",
+          width: 2,
+          lineStyle: "solid",
+        },
+      });
+
+      const result = await curatePlotDisplayTool.execute(
+        { visibleSpecies: ["NonExistentSpecies"], hiddenSpecies: ["S1"] },
+        context,
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("UNKNOWN_SPECIES");
+      expect(result.message).toContain(
+        "species ['NonExistentSpecies'] do not exist",
+      );
+      expect(result.message).toContain("Available plottable species: [S1, S2]");
+      // Ensure S1 was NOT hidden because validation aborted before mutation
+      const settings = store.get(variableSettingssAtom);
+      expect(settings["S1"].visible).toBe(true);
+      expect(settings["S2"].visible).toBe(true);
+    });
+
+    it("rejects curatePlotDisplayTool when hiddenSpecies contains unknown species without mutating curves", async () => {
+      store.set(variableSettingssAtom, {
+        S1: {
+          displayName: "S1",
+          visible: true,
+          color: "blue",
+          width: 2,
+          lineStyle: "solid",
+        },
+      });
+
+      const result = await curatePlotDisplayTool.execute(
+        { hiddenSpecies: ["GhostSpecies"] },
+        context,
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("UNKNOWN_SPECIES");
+      expect(result.message).toContain("species ['GhostSpecies'] do not exist");
+      expect(store.get(variableSettingssAtom)["S1"].visible).toBe(true);
+    });
+
+    it("rejects curatePlotDisplayTool when showOnly is true but requested species does not exist", async () => {
+      store.set(variableSettingssAtom, {
+        S1: {
+          displayName: "S1",
+          visible: true,
+          color: "blue",
+          width: 2,
+          lineStyle: "solid",
+        },
+        S2: {
+          displayName: "S2",
+          visible: true,
+          color: "red",
+          width: 2,
+          lineStyle: "solid",
+        },
+      });
+
+      const result = await curatePlotDisplayTool.execute(
+        { visibleSpecies: ["NonExistent"], showOnly: true },
+        context,
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("UNKNOWN_SPECIES");
+      // S1 and S2 should remain visible and not be wiped out
+      const settings = store.get(variableSettingssAtom);
+      expect(settings["S1"].visible).toBe(true);
+      expect(settings["S2"].visible).toBe(true);
+    });
+
     it("isolates specific species when showOnly is true", async () => {
       store.set(variableSettingssAtom, {
         S1: {

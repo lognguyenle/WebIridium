@@ -709,8 +709,13 @@ export const curatePlotDisplayTool: AgentTool = {
     const knownVarNames = knownVars.map((v) =>
       typeof v === "string" ? v : (v as { name: string }).name,
     );
-    const allKnownVariables: string[] =
-      knownVarNames.length > 0 ? knownVarNames : Object.keys(currentSettings);
+    const allKnownVariables: string[] = Array.from(
+      new Set(
+        knownVarNames.length > 0
+          ? [...knownVarNames, ...Object.keys(currentSettings)]
+          : Object.keys(currentSettings),
+      ),
+    );
 
     const findVarName = (input: string): string | undefined => {
       const trimmed = input.trim();
@@ -765,7 +770,42 @@ export const curatePlotDisplayTool: AgentTool = {
       }
     }
 
-    // 2. Compute updated variable visibility settings
+    // 2. Validate that all requested species in visibleSpecies / hiddenSpecies exist
+    if (allKnownVariables.length > 0) {
+      const invalidSpecies: string[] = [];
+
+      if (Array.isArray(args.visibleSpecies)) {
+        for (const item of args.visibleSpecies) {
+          const sName = String(item).trim();
+          if (sName && !findVarName(sName)) {
+            invalidSpecies.push(sName);
+          }
+        }
+      }
+
+      if (Array.isArray(args.hiddenSpecies)) {
+        for (const item of args.hiddenSpecies) {
+          const sName = String(item).trim();
+          if (sName && !findVarName(sName)) {
+            invalidSpecies.push(sName);
+          }
+        }
+      }
+
+      if (invalidSpecies.length > 0) {
+        const uniqueInvalid = Array.from(new Set(invalidSpecies));
+        const plottableList = allKnownVariables.filter(
+          (n) => n.toLowerCase() !== "time",
+        );
+        return {
+          success: false,
+          error: "UNKNOWN_SPECIES",
+          message: `Cannot configure plot: species [${uniqueInvalid.map((s) => `'${s}'`).join(", ")}] do not exist in the active model. Available plottable species: [${plottableList.join(", ")}]`,
+        };
+      }
+    }
+
+    // 3. Compute updated variable visibility settings
     let changed = false;
 
     if (
@@ -818,7 +858,7 @@ export const curatePlotDisplayTool: AgentTool = {
       }
     }
 
-    // 3. All validations passed; apply state mutations atomically
+    // 4. All validations passed; apply state mutations atomically
     if (changed) {
       set(variableSettingssAtom, updatedSettings);
     }
