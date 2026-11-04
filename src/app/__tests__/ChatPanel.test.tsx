@@ -556,4 +556,88 @@ describe("ChatPanel", () => {
       screen.getByRole("button", { name: /revert change/i }),
     ).toBeInTheDocument();
   });
+
+  it("automatically creates committedAction records with 1-click rollback when confirmation is disabled", async () => {
+    localStorage.setItem("chat_apiKey", JSON.stringify("sk-test-key"));
+    localStorage.setItem("chat_confirmToolActions", JSON.stringify(false));
+
+    let fetchCount = 0;
+    global.fetch = vi.fn().mockImplementation(() => {
+      fetchCount++;
+      if (fetchCount === 1) {
+        return Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () =>
+            Promise.resolve({
+              choices: [
+                {
+                  message: {
+                    role: "assistant",
+                    content: null,
+                    tool_calls: [
+                      {
+                        id: "call_sim_1",
+                        type: "function",
+                        function: {
+                          name: "select_simulator",
+                          arguments: JSON.stringify({
+                            simulatorName: "COPASI",
+                          }),
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            }),
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () =>
+          Promise.resolve({
+            choices: [
+              {
+                message: {
+                  role: "assistant",
+                  content: "I switched the simulator to COPASI.",
+                },
+              },
+            ],
+          }),
+      });
+    });
+
+    await renderWithinWorkspace(<ChatPanel visible={true} />);
+
+    const startBtn = screen.queryByRole("button", {
+      name: /start new conversation/i,
+    });
+    if (startBtn) {
+      await userEvent.click(startBtn);
+    }
+
+    const input = screen.getByLabelText("Message input");
+    await userEvent.type(input, "Switch simulator to COPASI");
+    await userEvent.click(screen.getByLabelText("Send message"));
+
+    // Verify committed action record details are rendered automatically
+    await waitFor(() => {
+      expect(screen.getByText("Committed Action")).toBeInTheDocument();
+    });
+    expect(screen.getAllByText("select_simulator").length).toBeGreaterThan(0);
+    expect(
+      screen.getByRole("button", { name: /revert change/i }),
+    ).toBeInTheDocument();
+
+    // Click Revert Change
+    await userEvent.click(
+      screen.getByRole("button", { name: /revert change/i }),
+    );
+    await waitFor(() => {
+      expect(screen.getByText("Reverted Action")).toBeInTheDocument();
+    });
+  });
 });

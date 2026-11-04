@@ -458,5 +458,100 @@ describe("executeHarnessTurn multi-turn action orchestration", () => {
         }),
       );
     });
+
+    it("preserves revertData and change details in executedTools when confirmation is disabled", async () => {
+      const executeMock = vi
+        .fn()
+        .mockResolvedValue({ success: true, message: "OK" });
+      const detailedTool: AgentTool = {
+        name: "configure_time_course",
+        description: "Configure time course",
+        mutatesState: true,
+        describeAction: (args) => `Change time course to ${args.endTime}s`,
+        describeChanges: (args) => ({
+          summary: `Change time course to ${args.endTime}s`,
+          changes: [
+            {
+              field: "End Time",
+              currentValue: "10s",
+              proposedValue: `${args.endTime}s`,
+            },
+          ],
+          consequences: ["Re-runs ODE simulation"],
+        }),
+        getRevertData: () => ({ previousEndTime: 10 }),
+        parameters: { type: "object", properties: {} },
+        execute: executeMock,
+      };
+
+      let fetchCount = 0;
+      global.fetch = vi.fn().mockImplementation(() => {
+        fetchCount++;
+        if (fetchCount === 1) {
+          return Promise.resolve({
+            ok: true,
+            json: () =>
+              Promise.resolve({
+                choices: [
+                  {
+                    message: {
+                      role: "assistant",
+                      content: null,
+                      tool_calls: [
+                        {
+                          id: "call_tc_unconfirmed",
+                          type: "function",
+                          function: {
+                            name: "configure_time_course",
+                            arguments: '{"endTime": 80}',
+                          },
+                        },
+                      ],
+                    },
+                  },
+                ],
+              }),
+          });
+        }
+        return Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              choices: [
+                {
+                  message: {
+                    role: "assistant",
+                    content: "Configured without modal confirmation.",
+                  },
+                },
+              ],
+            }),
+        });
+      });
+
+      const confirmMock = vi.fn();
+
+      const result = await executeHarnessTurn({
+        model: "gpt-5.4-mini",
+        openAiApiKey: "test-key",
+        messages: [{ role: "user", text: "Set end time to 80" }],
+        tools: [detailedTool],
+        context: mockContext,
+        requireConfirmation: false,
+        onConfirmAction: confirmMock,
+      });
+
+      expect(confirmMock).not.toHaveBeenCalled();
+      expect(executeMock).toHaveBeenCalled();
+      expect(result.executedTools).toHaveLength(1);
+      const executed = result.executedTools[0];
+      expect(executed.name).toBe("configure_time_course");
+      expect(executed.description).toBe("Change time course to 80s");
+      expect(executed.revertData).toEqual({ previousEndTime: 10 });
+      expect(executed.changes).toEqual([
+        { field: "End Time", currentValue: "10s", proposedValue: "80s" },
+      ]);
+      expect(executed.consequences).toEqual(["Re-runs ODE simulation"]);
+    });
   });
 });

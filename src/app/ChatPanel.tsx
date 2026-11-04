@@ -1126,17 +1126,51 @@ const ChatPanel = ({ visible }: ChatPanelProps) => {
       });
 
       setMessages((prev) => {
-        const finalized = prev.map((m) =>
-          m.id === placeholderId
-            ? {
-                ...m,
-                text: harnessResult.reply,
-                thinking: false,
-                executedTools: harnessResult.executedTools,
-                debugInfo: harnessResult.debugInfo,
-              }
-            : m,
-        );
+        const finalized = prev.map((m) => {
+          if (m.id !== placeholderId) return m;
+
+          const existingActionIds = new Set(
+            (m.committedActions || []).map((a) => a.id),
+          );
+
+          const autoCommittedActions: CommittedActionRecord[] = (
+            harnessResult.executedTools || []
+          )
+            .filter(
+              (t) =>
+                !existingActionIds.has(t.id) &&
+                t.result &&
+                t.result.success !== false &&
+                (Boolean(t.revertData) ||
+                  (Array.isArray(t.changes) && t.changes.length > 0)),
+            )
+            .map((t) => ({
+              id: t.id,
+              toolName: t.name,
+              arguments: t.arguments,
+              description: t.description || `Execute ${t.name}`,
+              changes: t.changes,
+              consequences: t.consequences,
+              status: "committed" as const,
+              timestamp: Date.now(),
+              revertData: t.revertData,
+            }));
+
+          const allCommittedActions = [
+            ...(m.committedActions || []),
+            ...autoCommittedActions,
+          ];
+
+          return {
+            ...m,
+            text: harnessResult.reply,
+            thinking: false,
+            executedTools: harnessResult.executedTools,
+            committedActions:
+              allCommittedActions.length > 0 ? allCommittedActions : undefined,
+            debugInfo: harnessResult.debugInfo,
+          };
+        });
         saveConversation(finalized);
         return finalized;
       });

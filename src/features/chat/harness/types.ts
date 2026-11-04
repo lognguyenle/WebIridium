@@ -109,6 +109,10 @@ export interface ExecutedToolRecord {
   result: ToolExecutionResult;
   turn?: number;
   step?: number;
+  description?: string;
+  changes?: StateChangeItem[];
+  consequences?: string[];
+  revertData?: Record<string, any>;
 }
 
 export interface HarnessProgressUpdate {

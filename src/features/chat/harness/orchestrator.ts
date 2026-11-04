@@ -149,6 +149,20 @@ export const executeHarnessTurn = async (
         const toolDef = tools.find((t) => t.name === call.name);
 
         if (toolDef) {
+          const changeDetails = toolDef.describeChanges
+            ? toolDef.describeChanges(call.arguments, context)
+            : undefined;
+
+          const actionDescription =
+            changeDetails?.summary ||
+            (toolDef.describeAction
+              ? toolDef.describeAction(call.arguments, context)
+              : `Execute ${call.name}`);
+
+          const revertData = toolDef.getRevertData
+            ? toolDef.getRevertData(call.arguments, context)
+            : undefined;
+
           // Check if action requires user confirmation
           const shouldConfirm =
             params.requireConfirmation !== false &&
@@ -156,16 +170,6 @@ export const executeHarnessTurn = async (
             Boolean(params.onConfirmAction);
 
           if (shouldConfirm && params.onConfirmAction) {
-            const changeDetails = toolDef.describeChanges
-              ? toolDef.describeChanges(call.arguments, context)
-              : undefined;
-
-            const actionDescription =
-              changeDetails?.summary ||
-              (toolDef.describeAction
-                ? toolDef.describeAction(call.arguments, context)
-                : `Execute ${call.name}`);
-
             params.onProgress?.({
               status: "confirming",
               message: `Awaiting user commitment: ${actionDescription}`,
@@ -174,10 +178,6 @@ export const executeHarnessTurn = async (
               toolName: call.name,
               arguments: call.arguments,
             });
-
-            const revertData = toolDef.getRevertData
-              ? toolDef.getRevertData(call.arguments, context)
-              : undefined;
 
             const approved = await params.onConfirmAction({
               id: call.id,
@@ -202,6 +202,9 @@ export const executeHarnessTurn = async (
                 result: declineResult,
                 turn: turnCount,
                 step: stepCount,
+                description: actionDescription,
+                changes: changeDetails?.changes,
+                consequences: changeDetails?.consequences,
               };
               executedTools.push(record);
               turnExecutedTools.push(record);
@@ -236,6 +239,10 @@ export const executeHarnessTurn = async (
               result,
               turn: turnCount,
               step: stepCount,
+              description: actionDescription,
+              changes: changeDetails?.changes,
+              consequences: changeDetails?.consequences,
+              revertData,
             };
             executedTools.push(record);
             turnExecutedTools.push(record);
@@ -257,6 +264,9 @@ export const executeHarnessTurn = async (
               result: errorResult,
               turn: turnCount,
               step: stepCount,
+              description: actionDescription,
+              changes: changeDetails?.changes,
+              consequences: changeDetails?.consequences,
             };
             executedTools.push(record);
             turnExecutedTools.push(record);
@@ -394,6 +404,20 @@ export const executeHarnessTurn = async (
         const toolDef = tools.find((t) => t.name === call.name);
 
         if (toolDef) {
+          const changeDetails = toolDef.describeChanges
+            ? toolDef.describeChanges(call.arguments, context)
+            : undefined;
+
+          const actionDescription =
+            changeDetails?.summary ||
+            (toolDef.describeAction
+              ? toolDef.describeAction(call.arguments, context)
+              : `Execute ${call.name}`);
+
+          const revertData = toolDef.getRevertData
+            ? toolDef.getRevertData(call.arguments, context)
+            : undefined;
+
           // Check if action requires user confirmation
           const shouldConfirm =
             params.requireConfirmation !== false &&
@@ -401,16 +425,6 @@ export const executeHarnessTurn = async (
             Boolean(params.onConfirmAction);
 
           if (shouldConfirm && params.onConfirmAction) {
-            const changeDetails = toolDef.describeChanges
-              ? toolDef.describeChanges(call.arguments, context)
-              : undefined;
-
-            const actionDescription =
-              changeDetails?.summary ||
-              (toolDef.describeAction
-                ? toolDef.describeAction(call.arguments, context)
-                : `Execute ${call.name}`);
-
             params.onProgress?.({
               status: "confirming",
               message: `Awaiting user commitment: ${actionDescription}`,
@@ -419,10 +433,6 @@ export const executeHarnessTurn = async (
               toolName: call.name,
               arguments: call.arguments,
             });
-
-            const revertData = toolDef.getRevertData
-              ? toolDef.getRevertData(call.arguments, context)
-              : undefined;
 
             const approved = await params.onConfirmAction({
               id: call.id,
@@ -447,6 +457,9 @@ export const executeHarnessTurn = async (
                 result: declineResult,
                 turn: turnCount,
                 step: stepCount,
+                description: actionDescription,
+                changes: changeDetails?.changes,
+                consequences: changeDetails?.consequences,
               };
               executedTools.push(record);
               turnExecutedTools.push(record);
@@ -481,6 +494,10 @@ export const executeHarnessTurn = async (
               result,
               turn: turnCount,
               step: stepCount,
+              description: actionDescription,
+              changes: changeDetails?.changes,
+              consequences: changeDetails?.consequences,
+              revertData,
             };
             executedTools.push(record);
             turnExecutedTools.push(record);
@@ -502,6 +519,9 @@ export const executeHarnessTurn = async (
               result: errorResult,
               turn: turnCount,
               step: stepCount,
+              description: actionDescription,
+              changes: changeDetails?.changes,
+              consequences: changeDetails?.consequences,
             };
             executedTools.push(record);
             turnExecutedTools.push(record);
