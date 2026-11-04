@@ -395,6 +395,47 @@ export const configureParameterScanTool: AgentTool = {
     const current = get(parameterScanOptionsAtom);
     const min = Number(args.min);
     const max = Number(args.max);
+    const paramName = String(args.varyingParameter || "").trim();
+
+    if (!paramName) {
+      return {
+        success: false,
+        message: "A parameter name must be provided for parameter scanning.",
+        error: "MISSING_PARAMETER_NAME",
+      };
+    }
+
+    const allVars = get(variablesAtom) || [];
+    if (allVars.length > 0) {
+      const settableParams = allVars
+        .filter((v) => v.type === "settable")
+        .map((v) => v.name);
+      const targetVar = allVars.find((v) => v.name === paramName);
+
+      if (!targetVar) {
+        const settableList =
+          settableParams.length > 0
+            ? ` Valid settable parameters: [${settableParams.join(", ")}].`
+            : "";
+        return {
+          success: false,
+          message: `Cannot scan parameter '${paramName}': variable does not exist in the active model.${settableList}`,
+          error: "INVALID_VARYING_PARAMETER",
+        };
+      }
+
+      if (targetVar.type !== "settable") {
+        const settableList =
+          settableParams.length > 0
+            ? ` Valid settable parameters: [${settableParams.join(", ")}].`
+            : "";
+        return {
+          success: false,
+          message: `Cannot scan variable '${paramName}': variable has type '${targetVar.type}' (category '${targetVar.category}') and is not settable for parameter scans. Only settable parameters can be scanned.${settableList}`,
+          error: "PARAMETER_NOT_SETTABLE",
+        };
+      }
+    }
 
     if (isNaN(min) || isNaN(max)) {
       return {
@@ -423,7 +464,7 @@ export const configureParameterScanTool: AgentTool = {
 
     const updatedOptions = {
       ...current,
-      varyingParameter: String(args.varyingParameter),
+      varyingParameter: paramName,
       min,
       max,
       numberOfValues:

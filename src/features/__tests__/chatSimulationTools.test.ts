@@ -26,7 +26,10 @@ import { simulatorAtom, getSimulatorName } from "@/globals/simulator";
 import { activeProjectFileAtom, metadataAtom } from "@/globals/project";
 import type { ProjectId } from "@/features/savedData";
 import { currentRightPanelAtom } from "@/globals/layout";
-import { simulateTimeCourseAtom } from "@/globals/simulation";
+import {
+  simulateTimeCourseAtom,
+  runParameterScanAtom,
+} from "@/globals/simulation";
 import { saveFullProjectAtom } from "@/globals/saving";
 import { type ToolContext } from "../chat/harness/types";
 
@@ -34,7 +37,12 @@ describe("Simulation Tools", () => {
   let store: ReturnType<typeof createStore>;
   let context: ToolContext;
   let mockSimulateTimeCourse: ReturnType<typeof vi.fn>;
-  let mockVariables: Array<{ name: string; category?: string }> = [];
+  let mockRunParameterScan: ReturnType<typeof vi.fn>;
+  let mockVariables: Array<{
+    name: string;
+    category?: string;
+    type?: "normal" | "settable";
+  }> = [];
 
   beforeEach(() => {
     store = createStore();
@@ -44,6 +52,7 @@ describe("Simulation Tools", () => {
       "mock-project-123" as unknown as ProjectId,
     );
     mockSimulateTimeCourse = vi.fn().mockResolvedValue({ type: "success" });
+    mockRunParameterScan = vi.fn().mockResolvedValue({ type: "success" });
 
     context = {
       get: <Value>(atom: Atom<Value>): Value => {
@@ -68,6 +77,12 @@ describe("Simulation Tools", () => {
           >)
         ) {
           return (mockSimulateTimeCourse as (...a: Args) => Result)(...args);
+        }
+        if (
+          atom ===
+          (runParameterScanAtom as unknown as WritableAtom<Value, Args, Result>)
+        ) {
+          return (mockRunParameterScan as (...a: Args) => Result)(...args);
         }
         return store.set(atom, ...args);
       },
@@ -861,6 +876,92 @@ describe("Simulation Tools", () => {
       expect(revertResult.success).toBe(true);
       expect(saveCalled).toBe(true);
       expect(store.get(metadataAtom)?.name).toBe("Original Model Name");
+    });
+  });
+
+  describe("configureParameterScanTool parameter validation", () => {
+    it("should configure parameter scan and run simulation for a valid settable parameter", async () => {
+      mockVariables = [
+        { name: "k1", category: "Parameters", type: "settable" },
+        { name: "S1", category: "Floating Species", type: "normal" },
+      ];
+
+      const result = await configureParameterScanTool.execute(
+        {
+          varyingParameter: "k1",
+          min: 0.1,
+          max: 5,
+          numberOfValues: 15,
+          useLogarithmicDistribution: true,
+        },
+        context,
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.message).toContain("parameter scan on 'k1'");
+      const opts = store.get(parameterScanOptionsAtom);
+      expect(opts.varyingParameter).toBe("k1");
+      expect(opts.min).toBe(0.1);
+      expect(opts.max).toBe(5);
+      expect(opts.numberOfValues).toBe(15);
+      expect(opts.useLogarithmicDistribution).toBe(true);
+      expect(mockRunParameterScan).toHaveBeenCalled();
+      expect(store.get(currentRightPanelAtom)).toBe("Results");
+    });
+
+    it("should reject configureParameterScanTool when varyingParameter does not exist in model without mutating settings", async () => {
+      mockVariables = [
+        { name: "k1", category: "Parameters", type: "settable" },
+        { name: "k2", category: "Parameters", type: "settable" },
+        { name: "S1", category: "Floating Species", type: "normal" },
+      ];
+
+      const prev = store.get(parameterScanOptionsAtom);
+
+      const result = await configureParameterScanTool.execute(
+        {
+          varyingParameter: "nonexistent_k",
+          min: 1,
+          max: 10,
+        },
+        context,
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("INVALID_VARYING_PARAMETER");
+      expect(result.message).toContain(
+        "variable does not exist in the active model",
+      );
+      expect(result.message).toContain("Valid settable parameters: [k1, k2]");
+      // Ensure state was not mutated
+      expect(store.get(parameterScanOptionsAtom)).toEqual(prev);
+      expect(mockRunParameterScan).not.toHaveBeenCalled();
+    });
+
+    it("should reject configureParameterScanTool when varyingParameter is not settable without mutating settings", async () => {
+      mockVariables = [
+        { name: "k1", category: "Parameters", type: "settable" },
+        { name: "S1", category: "Floating Species", type: "normal" },
+      ];
+
+      const prev = store.get(parameterScanOptionsAtom);
+
+      const result = await configureParameterScanTool.execute(
+        {
+          varyingParameter: "S1",
+          min: 1,
+          max: 10,
+        },
+        context,
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe("PARAMETER_NOT_SETTABLE");
+      expect(result.message).toContain("is not settable for parameter scans");
+      expect(result.message).toContain("Valid settable parameters: [k1]");
+      // Ensure state was not mutated
+      expect(store.get(parameterScanOptionsAtom)).toEqual(prev);
+      expect(mockRunParameterScan).not.toHaveBeenCalled();
     });
   });
 });
