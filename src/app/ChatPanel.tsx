@@ -890,10 +890,6 @@ const ChatPanel = ({ visible }: ChatPanelProps) => {
     }
   };
 
-  const handleStartNewChat = () => {
-    handleOpenNewChatPage();
-  };
-
   const handleSelectConversation = (conv: ChatConversation) => {
     setViewMode("chat");
     setMessages(
@@ -1235,20 +1231,6 @@ const ChatPanel = ({ visible }: ChatPanelProps) => {
         <div>
           <button
             className={styles.titleButton}
-            aria-label="Delete Conversation"
-            onClick={() => {
-              if (activeConversation) {
-                setConversationToDelete(activeConversation);
-              }
-            }}
-            disabled={!activeConversation || waitingForReply}
-          >
-            <Tooltip text="Delete Conversation">
-              <TrashIcon height="0.75em" width="0.75em" />
-            </Tooltip>
-          </button>
-          <button
-            className={styles.titleButton}
             aria-label="Export Conversation"
             onClick={handleExportConversation}
             disabled={!activeConversation || waitingForReply}
@@ -1283,16 +1265,6 @@ const ChatPanel = ({ visible }: ChatPanelProps) => {
           >
             <Tooltip text="Chat Settings">
               <SettingsIcon height="0.75em" width="0.75em" />
-            </Tooltip>
-          </button>
-          <button
-            className={styles.titleButton}
-            aria-expanded={showSettings}
-            aria-label="New Chat"
-            onClick={handleStartNewChat}
-          >
-            <Tooltip text="New Chat">
-              <PlusIcon height="0.75em" width="0.75em" />
             </Tooltip>
           </button>
         </div>
