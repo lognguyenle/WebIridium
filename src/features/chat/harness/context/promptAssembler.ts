@@ -1,30 +1,18 @@
 /**
  * Dynamic Prompt Assembler for the WebIridium Agent Harness.
- * Conditionally assembles high-signal system instructions, active project identity, and live simulation state.
+ * Assembles invariant system instructions, GUI constraints, tool guidance,
+ * and active Antimony model code.
+ *
+ * NOTE: Live dynamic workbench state (active project status, solver backend, time course settings,
+ * parameter scan options, plot curves, and simulation results) is intentionally excluded
+ * from the system prompt to maximize Anthropic and OpenAI prefix prompt caching.
+ * Dynamic state is injected exclusively on the latest user request message via
+ * [LIVE APPLICATION STATE AT TIME OF REQUEST].
  */
 
 import { type ToolContext } from "../types";
-import {
-  timeCourseParametersAtom,
-  parameterScanOptionsAtom,
-  independentVariableAtom,
-} from "@/globals/settings";
-
-const ALLOWED_INDEPENDENT_VARIABLE_CATEGORIES = new Set([
-  "Time",
-  "Floating Species",
-]);
-import {
-  variablesAtom,
-  variableSettingssAtom,
-  editorContentAtom,
-} from "@/globals/model";
-import { simulatorAtom, getSimulatorName } from "@/globals/simulator";
-import {
-  hasActiveProjectAtom,
-  activeProjectFileAtom,
-  metadataAtom,
-} from "@/globals/project";
+import { editorContentAtom } from "@/globals/model";
+import { hasActiveProjectAtom, metadataAtom } from "@/globals/project";
 import { MASTER_PROMPT } from "@/globals/chat";
 export { formatCurrentApplicationState } from "./stateSnapshot";
 
@@ -56,92 +44,18 @@ You help researchers build, debug, simulate, and analyze biological models writt
     sections.push(options.userSystemPrompt.trim());
   }
 
-  // 4. Active Project Context & Live Simulation Workbench State
+  // 4. Antimony Model Code (if project is open)
   const hasProject = context.get(hasActiveProjectAtom);
   if (hasProject) {
     const metadata = context.get(metadataAtom);
-    const activeProjectId = context.get(activeProjectFileAtom);
-    const timeCourse = context.get(timeCourseParametersAtom);
-    const paramScan = context.get(parameterScanOptionsAtom);
-    const activeSimulator = getSimulatorName(context.get(simulatorAtom));
-    const allVariables = context.get(variablesAtom);
-    const variableNames = allVariables.map((v) =>
-      typeof v === "string" ? v : (v as { name: string }).name,
-    );
-    const variableSettings = context.get(variableSettingssAtom);
-    const independentVar = context.get(independentVariableAtom) ?? "Time";
+    const projectName = metadata?.name || "Current Model";
     const currentCode = context.get(editorContentAtom);
 
-    const visibleVars = Object.entries(variableSettings)
-      .filter(([, s]) => s.visible)
-      .map(([k]) => k);
-
-    const projectName = metadata?.name || "Current Model";
-
-    const projectContextLines: string[] = [
-      "<active_project>",
-      `Project Name: "${projectName}"`,
-      activeProjectId ? `Project ID: ${activeProjectId}` : "",
-      "Status: Open and active in the workbench editor.",
-      "CRITICAL DIRECTIVE: A project is currently OPEN and ACTIVE in the workbench. Even if earlier messages in this chat conversation history stated that no project was open, a project is NOW OPEN. Do NOT repeat previous refusals or ask the user to open a project again. You must immediately proceed with simulation, parameter configuration, or plot curation on this active model as requested.",
-      "</active_project>",
-      "",
-      "<simulation_workbench_state>",
-      `Active Project: "${projectName}"`,
-      `Active Solver Backend: ${activeSimulator}`,
-      `Time Course Settings: start=${timeCourse.startTime}s, end=${timeCourse.endTime}s, points=${timeCourse.numberOfPoints}`,
-      `Scan Mode: ${paramScan.mode}`,
-    ].filter(Boolean);
-
-    if (paramScan.varyingParameter) {
-      projectContextLines.push(
-        `Active Parameter Scan: varying '${paramScan.varyingParameter}' from ${paramScan.min} to ${paramScan.max} (${paramScan.numberOfValues} steps, logScale=${paramScan.useLogarithmicDistribution})`,
-      );
-    }
-
-    const allowedIndependentVars = allVariables
-      .filter((v) =>
-        typeof v === "object" && v !== null && "category" in v
-          ? ALLOWED_INDEPENDENT_VARIABLE_CATEGORIES.has(
-              (v as { category: string }).category,
-            )
-          : true,
-      )
-      .map((v) => (typeof v === "string" ? v : (v as { name: string }).name));
-    const validAxisList = [
-      "Time",
-      ...allowedIndependentVars.filter((n) => n.toLowerCase() !== "time"),
-    ];
-
-    if (variableNames.length > 0) {
-      projectContextLines.push(
-        `Plottable Variables in Model: [${variableNames.join(", ")}]`,
-      );
-      projectContextLines.push(
-        `Currently Visible on Plot: [${visibleVars.join(", ")}]`,
-      );
-      projectContextLines.push(`Horizontal X-Axis: ${independentVar}`);
-      projectContextLines.push(
-        `Available Independent Variables (X-Axis, Time/Floating Species only): [${validAxisList.join(", ")}]`,
-      );
-    }
-
-    projectContextLines.push("</simulation_workbench_state>");
-    sections.push(projectContextLines.join("\n"));
-
-    // Provide model code whenever a project is active or explicitly requested
     if (currentCode?.trim() && options.includeModelContext !== false) {
       sections.push(
         `<current_antimony_model project="${projectName}">\n\`\`\`antimony\n${currentCode.trim()}\n\`\`\`\n</current_antimony_model>`,
       );
     }
-  } else {
-    sections.push(
-      `<active_project>
-Status: No project is currently open (user is on the Start screen).
-CRITICAL DIRECTIVE: There is NO project open in the workbench editor. You do NOT have tools to open or create projects for the user. If the user asks to run a simulation, configure parameters, tune rate constants, modify plot species, or inspect a model, you must inform them that no project is currently open and instruct them to open an existing project or create a new project from the WebIridium start screen first.
-</active_project>`,
-    );
   }
 
   // 5. State Accuracy & Self-Verification Directive
@@ -149,8 +63,8 @@ CRITICAL DIRECTIVE: There is NO project open in the workbench editor. You do NOT
     `<state_verification_directive>
 CRITICAL DIRECTIVE ON STATE ACCURACY & CLAIMS:
 Never make unverified claims, guesses, or assumptions about the state of the application.
-1. GROUND TRUTH: The application workbench state is dynamic. The user can change parameters, switch simulators, toggle visible species, or run simulations in the GUI at any time.
-2. VERIFY BEFORE CLAIMING: Before stating what parameters are currently set, which curves are plotted, which simulator is active, or what values the simulation produced, you MUST check the live [LIVE APPLICATION STATE AT TIME OF REQUEST] attached to the prompt or call the 'get_application_state' tool.
+1. GROUND TRUTH: The live workbench state (project status, active simulator, time course parameters, parameter scan settings, plotted curves, UI panels, and latest simulation outputs) is attached directly to the user's latest request turn in the [LIVE APPLICATION STATE AT TIME OF REQUEST] block.
+2. VERIFY BEFORE CLAIMING: Before stating what parameters are currently set, which curves are plotted, which simulator is active, or what values the simulation produced, you MUST check the live [LIVE APPLICATION STATE AT TIME OF REQUEST] block attached to the user's latest request or call the 'get_application_state' tool.
 3. NO HALLUCINATED SIMULATION DATA: If simulation results are reported as None, do NOT invent numbers or claim that a simulation has run. Clearly inform the user that a simulation must be run first, or offer to run it using 'run_simulation' or 'configure_time_course'.
 4. CONFIRM AFTER ACTIONS: When you execute actions that modify settings or plots, confirm the updated state before presenting your final reply.
 </state_verification_directive>`,
@@ -160,9 +74,8 @@ Never make unverified claims, guesses, or assumptions about the state of the app
   sections.push(
     `<tool_calling_guidance>
 You have access to workbench simulation, plot control, and model tools ('get_application_state', 'run_simulation', 'configure_time_course', 'configure_parameter_scan', 'curate_plot_display', 'select_simulator', 'update_antimony_model', 'save_project').
-- DYNAMIC WORKBENCH STATE: Always prioritize the live <active_project> section above over earlier conversational turns. If <active_project> indicates a project is open, you CAN and MUST execute tools for the user. Do not repeat earlier refusals.
-- PROJECT REQUIREMENT: Workbench tools can ONLY be executed when a project is open. You cannot open or create new projects from scratch.
-- If NO project is open: Do NOT call state-modifying tools. Inform the user that no project is currently open and instruct them to open or create a project in WebIridium first.
+- DYNAMIC WORKBENCH STATE: The ground-truth workbench state is provided in the [LIVE APPLICATION STATE AT TIME OF REQUEST] block inside the user's latest request turn. Always refer to this block to check whether a project is currently open, which solver is active, and what parameters are configured.
+- PROJECT REQUIREMENT: Workbench tools can ONLY be executed when a project is open. If [LIVE APPLICATION STATE AT TIME OF REQUEST] indicates no project is open: Do NOT call state-modifying tools. Inform the user that no project is currently open and instruct them to open or create a project in WebIridium first.
 - USER COMMITMENT FOR CHANGES: Any tool that alters workbench state (simulation parameters, scan ranges, plot curves, solver backend, model code, or project saving) requires explicit user commitment via an interactive review dialog before changes take effect. Always provide clear, accurate parameters. If the user declines to commit a change, respect their decision and ask how they would prefer to proceed.
 - When the user asks what the current state is, or when you need to verify state: call 'get_application_state'.
 - When the user asks to modify rate constants, equations, or species in the model: call 'update_antimony_model'.

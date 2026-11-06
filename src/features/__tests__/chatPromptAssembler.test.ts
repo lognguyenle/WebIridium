@@ -1,11 +1,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import type { Atom, WritableAtom } from "jotai";
 import { assembleAgentSystemPrompt } from "../chat/harness/context/promptAssembler";
-import {
-  hasActiveProjectAtom,
-  activeProjectFileAtom,
-  metadataAtom,
-} from "@/globals/project";
+import { hasActiveProjectAtom, metadataAtom } from "@/globals/project";
 import {
   timeCourseParametersAtom,
   parameterScanOptionsAtom,
@@ -40,93 +36,23 @@ describe("assembleAgentSystemPrompt", () => {
     };
   });
 
-  it("includes identity and indicates no open project when on Start screen", () => {
+  it("assembles static identity, formatting rules, and tool guidance without dynamic workbench state", () => {
     mockStore.set(hasActiveProjectAtom, false);
     const prompt = assembleAgentSystemPrompt(context);
 
     expect(prompt).toContain("interactive systems biology");
-    expect(prompt).toContain("<active_project>");
-    expect(prompt).toContain("No project is currently open");
-    expect(prompt).toContain(
-      "You do NOT have tools to open or create projects",
-    );
-    expect(prompt).toContain(
-      "instruct them to open an existing project or create a new project",
-    );
+    expect(prompt).toContain("CRITICAL INDEPENDENT VARIABLE RULE");
     expect(prompt).toContain("<tool_calling_guidance>");
+    expect(prompt).toContain("[LIVE APPLICATION STATE AT TIME OF REQUEST]");
+    // Dynamic workbench state is excluded from system prompt to enable 100% prefix caching
     expect(prompt).not.toContain("<simulation_workbench_state>");
+    expect(prompt).not.toContain("<active_project>");
   });
 
-  it("injects active project identity and live simulation state when project is open", () => {
-    mockStore.set(hasActiveProjectAtom, true);
-    mockStore.set(activeProjectFileAtom, "proj-repressilator-456");
-    mockStore.set(metadataAtom, {
-      name: "Repressilator Oscillation",
-      versionTag: 1,
-      created: 1000,
-      updated: 2000,
-      icon: { color: "blue" },
-    });
-    mockStore.set(timeCourseParametersAtom, {
-      startTime: 0,
-      endTime: 150,
-      numberOfPoints: 300,
-    });
-    mockStore.set(parameterScanOptionsAtom, {
-      mode: "timeCourse",
-      varyingParameter: null,
-      min: 0,
-      max: 10,
-      numberOfValues: 10,
-      useLogarithmicDistribution: false,
-    });
-    mockStore.set(variablesAtom, ["S1", "S2"]);
-    mockStore.set(variableSettingssAtom, {
-      S1: {
-        displayName: "S1",
-        visible: true,
-        color: "blue",
-        width: 2,
-        lineStyle: "solid",
-      },
-      S2: {
-        displayName: "S2",
-        visible: false,
-        color: "red",
-        width: 2,
-        lineStyle: "solid",
-      },
-    });
-    mockStore.set(simulatorAtom, { name: "COPASI" });
-
-    const prompt = assembleAgentSystemPrompt(context);
-
-    expect(prompt).toContain("<active_project>");
-    expect(prompt).toContain('Project Name: "Repressilator Oscillation"');
-    expect(prompt).toContain("proj-repressilator-456");
-    expect(prompt).toContain(
-      "A project is currently OPEN and ACTIVE in the workbench",
-    );
-    expect(prompt).toContain(
-      "Even if earlier messages in this chat conversation history stated that no project was open",
-    );
-    expect(prompt).toContain("<simulation_workbench_state>");
-    expect(prompt).toContain("start=0s, end=150s, points=300");
-  });
-
-  it("injects active project model code into system instructions", () => {
+  it("injects active project model code into system instructions when project is open", () => {
     mockStore.set(hasActiveProjectAtom, true);
     mockStore.set(metadataAtom, { name: "Repressilator" });
     mockStore.set(editorContentAtom, "S1 -> S2; k1*S1\nk1 = 0.5");
-    mockStore.set(timeCourseParametersAtom, {
-      startTime: 0,
-      endTime: 20,
-      numberOfPoints: 200,
-    });
-    mockStore.set(parameterScanOptionsAtom, { mode: "timeCourse" });
-    mockStore.set(variablesAtom, []);
-    mockStore.set(variableSettingssAtom, {});
-    mockStore.set(simulatorAtom, {});
 
     const prompt = assembleAgentSystemPrompt(context);
 
@@ -134,5 +60,41 @@ describe("assembleAgentSystemPrompt", () => {
       '<current_antimony_model project="Repressilator">',
     );
     expect(prompt).toContain("S1 -> S2; k1*S1");
+    expect(prompt).not.toContain("<simulation_workbench_state>");
+  });
+
+  it("keeps system prompt invariant across workbench parameter updates for prefix prompt caching", () => {
+    mockStore.set(hasActiveProjectAtom, true);
+    mockStore.set(metadataAtom, { name: "Oscillator" });
+    mockStore.set(editorContentAtom, "S1 -> S2; k1*S1");
+    mockStore.set(timeCourseParametersAtom, {
+      startTime: 0,
+      endTime: 10,
+      numberOfPoints: 100,
+    });
+    mockStore.set(parameterScanOptionsAtom, { mode: "timeCourse" });
+
+    const promptInitial = assembleAgentSystemPrompt(context);
+
+    // Modify GUI sliders, scan bounds, plot settings, and solver backend
+    mockStore.set(timeCourseParametersAtom, {
+      startTime: 5,
+      endTime: 500,
+      numberOfPoints: 1000,
+    });
+    mockStore.set(parameterScanOptionsAtom, {
+      mode: "steadyState",
+      varyingParameter: "k1",
+      min: 0.1,
+      max: 10,
+    });
+    mockStore.set(variablesAtom, ["S1", "S2"]);
+    mockStore.set(variableSettingssAtom, { S1: { visible: false } });
+    mockStore.set(simulatorAtom, { name: "libsbmlsim" });
+
+    const promptAfterWorkbenchChanges = assembleAgentSystemPrompt(context);
+
+    // System prompt remains 100% byte-for-byte identical, guaranteeing a prompt cache hit!
+    expect(promptAfterWorkbenchChanges).toBe(promptInitial);
   });
 });
