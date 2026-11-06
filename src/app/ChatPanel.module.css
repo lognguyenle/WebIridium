@@ -119,7 +119,10 @@
 }
 
 .message-llm {
-  justify-content: flex-start;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
 }
 
 .message-user {
@@ -2085,4 +2088,46 @@
   border-radius: 10px;
   padding: 10px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.message-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  margin-top: var(--spacing-2);
+  padding: 2px 0;
+}
+
+.message-toolbar-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--border-radius);
+  color: var(--color-button-fg-dim);
+  font-size: calc(var(--font-size-small) - 1px);
+  padding: 3px 8px;
+  cursor: pointer;
+  line-height: 1.3;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.message-toolbar-button:hover {
+  background: var(--color-button-bg-hover);
+  color: var(--color-button-fg);
+  border-color: var(--color-layer2-border);
+}
+
+.message-toolbar-button-active {
+  background: rgba(var(--color-accent-rgb, 100, 100, 255), 0.12);
+  color: var(--color-accent);
+  border-color: rgba(var(--color-accent-rgb, 100, 100, 255), 0.3);
+}
+
+.message-toolbar-button-copied {
+  color: var(--color-success) !important;
+  border-color: rgba(16, 185, 129, 0.3) !important;
+  background: rgba(16, 185, 129, 0.1) !important;
 }

@@ -640,4 +640,54 @@ describe("ChatPanel", () => {
       expect(screen.getByText("Reverted Action")).toBeInTheDocument();
     });
   });
+  it("renders toolbar with copy and more info buttons below LLM messages", async () => {
+    await setupChatWithKey();
+
+    const mockResponse = {
+      choices: [
+        {
+          message: {
+            role: "assistant",
+            content: "Detailed biological response to copy.",
+          },
+        },
+      ],
+    };
+
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve(mockResponse),
+    });
+
+    const input = screen.getByLabelText("Message input");
+    await userEvent.type(input, "Tell me about glycolysis");
+    await userEvent.click(screen.getByLabelText("Send message"));
+
+    const matchingTexts = await screen.findAllByText("Detailed biological response to copy.");
+    expect(matchingTexts.length).toBeGreaterThanOrEqual(1);
+
+    // Toolbar buttons
+    const copyBtn = screen.getByRole("button", { name: /copy message text/i });
+    const infoBtn = screen.getByRole("button", { name: /more information/i });
+
+    expect(copyBtn).toBeInTheDocument();
+    expect(infoBtn).toBeInTheDocument();
+
+    // Click copy button
+    const writeTextMock = vi.fn().mockResolvedValue(undefined);
+    Object.assign(navigator, {
+      clipboard: {
+        writeText: writeTextMock,
+      },
+    });
+
+    await userEvent.click(copyBtn);
+    expect(writeTextMock).toHaveBeenCalledWith("Detailed biological response to copy.");
+    expect(screen.getByText("Copied")).toBeInTheDocument();
+
+    // Click More info button to toggle details
+    await userEvent.click(infoBtn);
+    expect(screen.getByText("Debug & Execution Details")).toBeInTheDocument();
+  });
 });

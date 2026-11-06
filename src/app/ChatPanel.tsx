@@ -31,6 +31,8 @@ import rehypeKatex from "rehype-katex";
 import SettingsIcon from "@/assets/icons/SettingsIcon.svg?react";
 import PlusIcon from "@/assets/icons/PlusIcon.svg?react";
 import CheckIcon from "@/assets/icons/CheckIcon.svg?react";
+import CopyIcon from "@/assets/icons/CopyIcon.svg?react";
+import InfoIcon from "@/assets/icons/InfoIcon.svg?react";
 import SendIcon from "@/assets/icons/SendIcon.svg?react";
 import TrashIcon from "@/assets/icons/TrashIcon.svg?react";
 import DownloadIcon from "@/assets/icons/DownloadIcon.svg?react";
@@ -600,6 +602,37 @@ const ChatPanel = ({ visible }: ChatPanelProps) => {
   const [revertingActionId, setRevertingActionId] = useState<string | null>(
     null,
   );
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
+  const [openInfoMessageIds, setOpenInfoMessageIds] = useState<
+    Record<string, boolean>
+  >({});
+  const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleCopyMessage = (id: string, text: string) => {
+    void navigator.clipboard?.writeText(text);
+    setCopiedMessageId(id);
+    if (copyTimeoutRef.current) {
+      clearTimeout(copyTimeoutRef.current);
+    }
+    copyTimeoutRef.current = setTimeout(() => {
+      setCopiedMessageId((current) => (current === id ? null : current));
+    }, 2000);
+  };
+
+  const toggleMessageInfo = (id: string) => {
+    setOpenInfoMessageIds((prev) => ({
+      ...prev,
+      [id]: !prev[id],
+    }));
+  };
   const store = useStore();
   const toolContext = useMemo(() => getJotaiToolContext(store), [store]);
   const [activeConversation, setActiveConversation] = useAtom(
@@ -2069,9 +2102,71 @@ const ChatPanel = ({ visible }: ChatPanelProps) => {
                       ) : (
                         <div className={styles.plainText}>{m.text}</div>
                       )}
-                      {showDebugDetails && m.debugInfo && (
+                      {m.role === "llm" && !m.thinking && (
+                        <div className={styles.messageToolbar}>
+                          <button
+                            type="button"
+                            className={clsx(
+                              styles.messageToolbarButton,
+                              copiedMessageId === m.id &&
+                                styles.messageToolbarButtonCopied,
+                            )}
+                            onClick={() => handleCopyMessage(m.id, m.text)}
+                            aria-label="Copy message text"
+                            title="Copy message"
+                          >
+                            {copiedMessageId === m.id ? (
+                              <>
+                                <CheckIcon
+                                  width="0.85em"
+                                  height="0.85em"
+                                  aria-hidden
+                                />
+                                <span>Copied</span>
+                              </>
+                            ) : (
+                              <>
+                                <CopyIcon
+                                  width="0.85em"
+                                  height="0.85em"
+                                  aria-hidden
+                                />
+                                <span>Copy</span>
+                              </>
+                            )}
+                          </button>
+
+                          <button
+                            type="button"
+                            className={clsx(
+                              styles.messageToolbarButton,
+                              (openInfoMessageIds[m.id] ?? showDebugDetails) &&
+                                styles.messageToolbarButtonActive,
+                            )}
+                            onClick={() => toggleMessageInfo(m.id)}
+                            aria-label="More information"
+                            title="More information about this response"
+                            aria-expanded={
+                              openInfoMessageIds[m.id] ?? showDebugDetails
+                            }
+                          >
+                            <InfoIcon
+                              width="0.85em"
+                              height="0.85em"
+                              aria-hidden
+                            />
+                            <span>More info</span>
+                          </button>
+                        </div>
+                      )}
+
+                      {(showDebugDetails || openInfoMessageIds[m.id]) && (
                         <div className={styles.debugContainer}>
-                          <details className={styles.debugDetails}>
+                          {m.debugInfo ? (
+                            <details
+                              className={styles.debugDetails}
+                              open={Boolean(openInfoMessageIds[m.id]) || showDebugDetails}
+                            >
                             <summary className={styles.debugSummary}>
                               <span className={styles.debugSummaryTitle}>
                                 Debug & Execution Details
@@ -2348,8 +2443,33 @@ const ChatPanel = ({ visible }: ChatPanelProps) => {
                               </details>
                             </div>
                           </details>
-                        </div>
-                      )}
+                        ) : (
+                          <details className={styles.debugDetails} open>
+                            <summary className={styles.debugSummary}>
+                              <span className={styles.debugSummaryTitle}>
+                                Response Information
+                              </span>
+                              <span className={styles.debugBadge}>
+                                Assistant
+                              </span>
+                              <span className={styles.debugBadge}>
+                                {m.text.length} chars
+                              </span>
+                            </summary>
+                            <div className={styles.debugBody}>
+                              <p
+                                style={{
+                                  margin: "var(--spacing-2) 0",
+                                  fontSize: "var(--font-size-small)",
+                                }}
+                              >
+                                Standard assistant response. Detailed execution logs are recorded during multi-turn simulation actions.
+                              </p>
+                            </div>
+                          </details>
+                        )}
+                      </div>
+                    )}
                     </div>
                   </div>
                 ))}
