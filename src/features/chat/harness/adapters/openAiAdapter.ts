@@ -2,7 +2,7 @@
  * OpenAI adapter with function calling / tool use support.
  */
 
-import { type AgentTool, type ToolCall } from "../types";
+import { type AgentTool, type ToolCall, type TokenUsage } from "../types";
 
 export interface OpenAiExecutionMessage {
   role: "system" | "user" | "assistant" | "tool";
@@ -35,6 +35,14 @@ export interface OpenAiChatCompletionResponse {
     };
     finish_reason?: string;
   }>;
+  usage?: {
+    prompt_tokens?: number;
+    completion_tokens?: number;
+    total_tokens?: number;
+    prompt_tokens_details?: {
+      cached_tokens?: number;
+    };
+  };
   output?: Array<{
     type?: string;
     content?: Array<{
@@ -47,6 +55,7 @@ export interface OpenAiCallResult {
   text: string;
   toolCalls: ToolCall[];
   rawMessage: OpenAiExecutionMessage;
+  usage?: TokenUsage;
 }
 
 export const callOpenAiApi = async (params: {
@@ -116,6 +125,20 @@ export const callOpenAiApi = async (params: {
     });
   }
 
+  const promptTokens = data.usage?.prompt_tokens ?? 0;
+  const completionTokens = data.usage?.completion_tokens ?? 0;
+  const totalTokens =
+    data.usage?.total_tokens ?? promptTokens + completionTokens;
+  const cachedTokens = data.usage?.prompt_tokens_details?.cached_tokens;
+  const usage: TokenUsage | undefined = data.usage
+    ? {
+        promptTokens,
+        completionTokens,
+        totalTokens,
+        ...(cachedTokens !== undefined ? { cachedTokens } : {}),
+      }
+    : undefined;
+
   return {
     text: message?.content ?? legacyContent ?? "",
     toolCalls: parsedToolCalls,
@@ -123,5 +146,6 @@ export const callOpenAiApi = async (params: {
       role: "assistant",
       content: "",
     }) as OpenAiExecutionMessage,
+    usage,
   };
 };

@@ -13,6 +13,7 @@ import {
   type ConfirmationRequest,
   type ToolContext,
   type AgentTurnDebug,
+  type TokenUsage,
 } from "./types";
 import { simulationTools } from "./tools/simulationTools";
 import {
@@ -51,6 +52,34 @@ export const getJotaiToolContext = (
   return {
     get: (atom) => store.get(atom),
     set: (atom, ...args) => store.set(atom, ...args),
+  };
+};
+
+const aggregateUsage = (turns: AgentTurnDebug[]): TokenUsage | undefined => {
+  let promptTokens = 0;
+  let completionTokens = 0;
+  let totalTokens = 0;
+  let cachedTokens = 0;
+  let hasUsage = false;
+
+  for (const t of turns) {
+    if (t.usage) {
+      hasUsage = true;
+      promptTokens += t.usage.promptTokens;
+      completionTokens += t.usage.completionTokens;
+      totalTokens += t.usage.totalTokens;
+      if (t.usage.cachedTokens) {
+        cachedTokens += t.usage.cachedTokens;
+      }
+    }
+  }
+
+  if (!hasUsage) return undefined;
+  return {
+    promptTokens,
+    completionTokens,
+    totalTokens,
+    ...(cachedTokens > 0 ? { cachedTokens } : {}),
   };
 };
 
@@ -132,6 +161,7 @@ export const executeHarnessTurn = async (
         finalReply = turn.text || finalReply || "(no response)";
         turnDebugs.push({
           turn: turnCount,
+          usage: turn.usage,
           modelResponse: {
             text: turn.text,
             toolCalls: [],
@@ -282,6 +312,7 @@ export const executeHarnessTurn = async (
 
       turnDebugs.push({
         turn: turnCount,
+        usage: turn.usage,
         modelResponse: {
           text: turn.text,
           toolCalls: turn.toolCalls,
@@ -322,6 +353,7 @@ export const executeHarnessTurn = async (
         totalTurns: turnCount,
         totalSteps: stepCount,
         durationMs: Date.now() - startTime,
+        usage: aggregateUsage(turnDebugs),
         turns: turnDebugs,
       },
     };
@@ -387,6 +419,7 @@ export const executeHarnessTurn = async (
         finalReply = turn.text || finalReply || "(no response)";
         turnDebugs.push({
           turn: turnCount,
+          usage: turn.usage,
           modelResponse: {
             text: turn.text,
             toolCalls: [],
@@ -536,6 +569,7 @@ export const executeHarnessTurn = async (
 
       turnDebugs.push({
         turn: turnCount,
+        usage: turn.usage,
         modelResponse: {
           text: turn.text,
           toolCalls: turn.toolCalls,
@@ -569,6 +603,7 @@ export const executeHarnessTurn = async (
         totalTurns: turnCount,
         totalSteps: stepCount,
         durationMs: Date.now() - startTime,
+        usage: aggregateUsage(turnDebugs),
         turns: turnDebugs,
       },
     };

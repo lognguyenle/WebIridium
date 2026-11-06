@@ -2,7 +2,7 @@
  * Anthropic Claude adapter with native Tool Use support.
  */
 
-import { type AgentTool, type ToolCall } from "../types";
+import { type AgentTool, type ToolCall, type TokenUsage } from "../types";
 
 export interface AnthropicExecutionTurn {
   role: "user" | "assistant";
@@ -18,12 +18,19 @@ export interface AnthropicResponsePayload {
     input?: Record<string, any>;
   }>;
   stop_reason?: string;
+  usage?: {
+    input_tokens?: number;
+    output_tokens?: number;
+    cache_creation_input_tokens?: number;
+    cache_read_input_tokens?: number;
+  };
 }
 
 export interface AnthropicCallResult {
   text: string;
   toolCalls: ToolCall[];
   rawContent: unknown;
+  usage?: TokenUsage;
 }
 
 export const callAnthropicApi = async (params: {
@@ -87,9 +94,23 @@ export const callAnthropicApi = async (params: {
     arguments: b.input ?? {},
   }));
 
+  const promptTokens = data.usage?.input_tokens ?? 0;
+  const completionTokens = data.usage?.output_tokens ?? 0;
+  const totalTokens = promptTokens + completionTokens;
+  const cachedTokens = data.usage?.cache_read_input_tokens;
+  const usage: TokenUsage | undefined = data.usage
+    ? {
+        promptTokens,
+        completionTokens,
+        totalTokens,
+        ...(cachedTokens !== undefined ? { cachedTokens } : {}),
+      }
+    : undefined;
+
   return {
     text: textBlocks.join("\n\n").trim(),
     toolCalls,
     rawContent: contentBlocks,
+    usage,
   };
 };

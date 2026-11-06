@@ -139,8 +139,16 @@ export interface HarnessRequest {
   tools?: AgentTool[];
 }
 
+export interface TokenUsage {
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+  cachedTokens?: number;
+}
+
 export interface AgentTurnDebug {
   turn: number;
+  usage?: TokenUsage;
   modelResponse: {
     text?: string;
     toolCalls: ToolCall[];
@@ -156,6 +164,7 @@ export interface AgentDebugInfo {
   totalTurns: number;
   totalSteps: number;
   durationMs?: number;
+  usage?: TokenUsage;
   turns: AgentTurnDebug[];
 }
 

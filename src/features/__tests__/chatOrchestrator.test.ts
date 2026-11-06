@@ -553,5 +553,96 @@ describe("executeHarnessTurn multi-turn action orchestration", () => {
       ]);
       expect(executed.consequences).toEqual(["Re-runs ODE simulation"]);
     });
+
+    it("accumulates and reports token usage across turns in debugInfo", async () => {
+      let callCount = 0;
+      global.fetch = vi.fn().mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          return Promise.resolve({
+            ok: true,
+            json: () =>
+              Promise.resolve({
+                choices: [
+                  {
+                    message: {
+                      role: "assistant",
+                      content: null,
+                      tool_calls: [
+                        {
+                          id: "call_a",
+                          type: "function",
+                          function: { name: "tool_alpha", arguments: "{}" },
+                        },
+                      ],
+                    },
+                  },
+                ],
+                usage: {
+                  prompt_tokens: 100,
+                  completion_tokens: 25,
+                  total_tokens: 125,
+                  prompt_tokens_details: { cached_tokens: 10 },
+                },
+              }),
+          });
+        }
+        return Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              choices: [
+                {
+                  message: {
+                    role: "assistant",
+                    content: "Done processing.",
+                  },
+                },
+              ],
+              usage: {
+                prompt_tokens: 150,
+                completion_tokens: 30,
+                total_tokens: 180,
+                prompt_tokens_details: { cached_tokens: 15 },
+              },
+            }),
+        });
+      });
+
+      const dummyTool: AgentTool = {
+        name: "tool_alpha",
+        description: "Test tool",
+        parameters: { type: "object", properties: {} },
+        execute: () => ({ success: true, message: "OK" }),
+      };
+
+      const result = await executeHarnessTurn({
+        model: "gpt-5.4-mini",
+        openAiApiKey: "test-key",
+        messages: [{ role: "user", text: "Run analysis" }],
+        tools: [dummyTool],
+        context: mockContext,
+        requireConfirmation: false,
+      });
+
+      expect(result.debugInfo?.usage).toEqual({
+        promptTokens: 250,
+        completionTokens: 55,
+        totalTokens: 305,
+        cachedTokens: 25,
+      });
+      expect(result.debugInfo?.turns[0].usage).toEqual({
+        promptTokens: 100,
+        completionTokens: 25,
+        totalTokens: 125,
+        cachedTokens: 10,
+      });
+      expect(result.debugInfo?.turns[1].usage).toEqual({
+        promptTokens: 150,
+        completionTokens: 30,
+        totalTokens: 180,
+        cachedTokens: 15,
+      });
+    });
   });
 });

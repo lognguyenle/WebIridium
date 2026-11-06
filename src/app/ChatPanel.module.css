@@ -7,6 +7,7 @@
   width: 100%;
   overflow: hidden;
   min-height: 0;
+  position: relative;
 }
 
 .panelHidden {
@@ -2130,4 +2131,269 @@
   color: var(--color-success) !important;
   border-color: rgba(16, 185, 129, 0.3) !important;
   background: rgba(16, 185, 129, 0.1) !important;
+}
+
+/* Response Information Popup Modal */
+.infoModalOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 999;
+  background-color: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-3);
+  animation: fadeIn 0.15s ease-out;
+}
+
+.infoModalDialog {
+  background: var(--color-layer1-bg);
+  border: 1px solid var(--color-layer2-border);
+  border-radius: 10px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 620px;
+  max-height: 85%;
+  overflow: hidden;
+  animation: slideUp 0.15s ease-out;
+}
+
+.infoModalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--color-layer2-bg);
+  border-bottom: 1px solid var(--color-layer2-border);
+}
+
+.infoModalTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--font-size-big);
+  font-weight: 700;
+  color: var(--color-layer1-fg);
+}
+
+.infoModalCloseBtn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+  padding: 4px 6px;
+  color: var(--color-ghost-button-fg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.infoModalCloseBtn:hover {
+  background-color: var(--color-ghost-button-hover-bg);
+  color: var(--color-layer1-fg);
+}
+
+.infoModalBody {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.infoMetaGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.infoMetaCard {
+  background: var(--color-layer2-bg);
+  border: 1px solid var(--color-layer2-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.infoMetaLabel {
+  font-size: 0.72em;
+  font-weight: 600;
+  color: var(--color-layer2-fg);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.infoMetaValue {
+  font-size: 0.88em;
+  font-weight: 600;
+  color: var(--color-layer1-fg);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.infoSubtext {
+  font-weight: 400;
+  color: var(--color-layer2-fg);
+  font-size: 0.85em;
+}
+
+.tokenUsageSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tokenUsageTitle {
+  font-size: 0.82em;
+  font-weight: 700;
+  color: var(--color-layer1-fg);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tokenGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 8px;
+}
+
+.tokenCard {
+  background: var(--color-layer2-bg);
+  border: 1px solid var(--color-layer2-border);
+  border-radius: 8px;
+  padding: 10px 8px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tokenCardValue {
+  font-size: 1.15em;
+  font-weight: 700;
+  color: var(--color-accent);
+  font-family: monospace;
+}
+
+.tokenCardLabel {
+  font-size: 0.7em;
+  font-weight: 600;
+  color: var(--color-layer2-fg);
+  text-transform: uppercase;
+}
+
+.tokenNotReported {
+  padding: 10px 12px;
+  font-size: 0.82em;
+  color: var(--color-layer2-fg);
+  background: var(--color-layer2-bg);
+  border: 1px solid var(--color-layer2-border);
+  border-radius: 6px;
+}
+
+.modalDebugDropdown {
+  border: 1px solid var(--color-layer2-border);
+  border-radius: 8px;
+  background: var(--color-layer2-bg);
+  overflow: hidden;
+}
+
+.modalDebugSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  cursor: pointer;
+  background: rgba(0, 0, 0, 0.04);
+  user-select: none;
+  transition: background 0.15s ease;
+}
+
+.modalDebugSummary:hover {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.modalDebugSummaryLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modalDebugChevron {
+  transition: transform 0.15s ease;
+}
+
+.modalDebugDropdown[open] .modalDebugChevron {
+  transform: rotate(180deg);
+}
+
+.modalDebugContent {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--color-layer1-bg);
+  border-top: 1px solid var(--color-layer2-border);
+}
+
+.emptyDebugState {
+  padding: 8px 4px;
+  font-size: 0.82em;
+  color: var(--color-layer2-fg);
+  font-style: italic;
+}
+
+.infoModalFooter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 10px 16px;
+  background: var(--color-layer2-bg);
+  border-top: 1px solid var(--color-layer2-border);
+}
+
+.infoModalDismissBtn {
+  background: var(--color-layer1-bg);
+  border: 1px solid var(--color-layer2-border);
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 0.85em;
+  font-weight: 600;
+  color: var(--color-layer1-fg);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.infoModalDismissBtn:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }

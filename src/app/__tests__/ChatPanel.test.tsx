@@ -170,6 +170,11 @@ describe("ChatPanel", () => {
       "Model reply with full debug info",
     );
     expect(matchingTexts.length).toBeGreaterThanOrEqual(1);
+
+    const infoBtn = screen.getByRole("button", { name: /more information/i });
+    await userEvent.click(infoBtn);
+
+    expect(screen.getByText("Message Information")).toBeInTheDocument();
     expect(screen.getByText("Debug & Execution Details")).toBeInTheDocument();
     expect(
       screen.getByText("Assembled System Prompt & Context"),
@@ -693,5 +698,81 @@ describe("ChatPanel", () => {
     // Click More info button to toggle details
     await userEvent.click(infoBtn);
     expect(screen.getByText("Debug & Execution Details")).toBeInTheDocument();
+  });
+
+  it("displays response info popup with token usage, date sent, model used, and debug info dropdown", async () => {
+    await setupChatWithKey();
+
+    const mockResponse = {
+      choices: [
+        {
+          message: {
+            role: "assistant",
+            content: "Response with detailed token metrics.",
+          },
+        },
+      ],
+      usage: {
+        prompt_tokens: 142,
+        completion_tokens: 68,
+        total_tokens: 210,
+        prompt_tokens_details: {
+          cached_tokens: 32,
+        },
+      },
+    };
+
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: () => Promise.resolve(mockResponse),
+    });
+
+    const input = screen.getByLabelText("Message input");
+    await userEvent.type(input, "Analyze reaction kinetics");
+    await userEvent.click(screen.getByLabelText("Send message"));
+
+    const matchingTexts = await screen.findAllByText(
+      "Response with detailed token metrics.",
+    );
+    expect(matchingTexts.length).toBeGreaterThanOrEqual(1);
+
+    const infoBtn = screen.getByRole("button", { name: /more information/i });
+    await userEvent.click(infoBtn);
+
+    // Dialog title
+    const dialog = screen.getByRole("dialog");
+    expect(within(dialog).getByText("Message Information")).toBeInTheDocument();
+
+    // Model used
+    expect(within(dialog).getByText("Model Used")).toBeInTheDocument();
+    expect(within(dialog).getByText("GPT-5.4 Mini ($)")).toBeInTheDocument();
+    expect(within(dialog).getByText("OpenAI")).toBeInTheDocument();
+
+    // Date sent
+    expect(within(dialog).getByText("Date Sent")).toBeInTheDocument();
+
+    // Token usage info
+    expect(within(dialog).getByText("Token Usage")).toBeInTheDocument();
+    expect(within(dialog).getByText("142")).toBeInTheDocument();
+    expect(within(dialog).getByText("Prompt Tokens")).toBeInTheDocument();
+    expect(within(dialog).getByText("68")).toBeInTheDocument();
+    expect(within(dialog).getByText("Completion Tokens")).toBeInTheDocument();
+    expect(within(dialog).getByText("210")).toBeInTheDocument();
+    expect(within(dialog).getByText("Total Tokens")).toBeInTheDocument();
+    expect(within(dialog).getByText("32")).toBeInTheDocument();
+    expect(within(dialog).getByText("Cached Tokens")).toBeInTheDocument();
+
+    // Optional expandable debug dropdown
+    expect(
+      within(dialog).getByText("Debug & Execution Details"),
+    ).toBeInTheDocument();
+
+    // Close button dismisses popup
+    const closeBtn = within(dialog).getByRole("button", {
+      name: /close message information dialog/i,
+    });
+    await userEvent.click(closeBtn);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 });

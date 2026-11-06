@@ -66,6 +66,7 @@ type Message = {
   id: string;
   role: "user" | "llm";
   text: string;
+  timestamp?: number;
   thinking?: boolean;
   isError?: boolean;
   statusText?: string;
@@ -158,6 +159,16 @@ const PastConversationCard = ({
       </div>
     </div>
   );
+};
+
+const formatMessageDate = (timestamp?: number): string => {
+  if (!timestamp) return "Unknown date";
+  const d = new Date(timestamp);
+  if (isNaN(d.getTime())) return "Unknown date";
+  return d.toLocaleString(undefined, {
+    dateStyle: "medium",
+    timeStyle: "medium",
+  });
 };
 
 interface ApiKeyEntryFieldProps {
@@ -603,18 +614,38 @@ const ChatPanel = ({ visible }: ChatPanelProps) => {
     null,
   );
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
-  const [openInfoMessageIds, setOpenInfoMessageIds] = useState<
-    Record<string, boolean>
-  >({});
+  const [activeInfoMessage, setActiveInfoMessage] = useState<Message | null>(
+    null,
+  );
+  const [copiedInfoSnippet, setCopiedInfoSnippet] = useState<string | null>(
+    null,
+  );
   const copyTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const infoSnippetTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
 
   useEffect(() => {
     return () => {
       if (copyTimeoutRef.current) {
         clearTimeout(copyTimeoutRef.current);
       }
+      if (infoSnippetTimeoutRef.current) {
+        clearTimeout(infoSnippetTimeoutRef.current);
+      }
     };
   }, []);
+
+  useEffect(() => {
+    if (!activeInfoMessage) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setActiveInfoMessage(null);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [activeInfoMessage]);
 
   const handleCopyMessage = (id: string, text: string) => {
     void navigator.clipboard?.writeText(text);
@@ -627,11 +658,15 @@ const ChatPanel = ({ visible }: ChatPanelProps) => {
     }, 2000);
   };
 
-  const toggleMessageInfo = (id: string) => {
-    setOpenInfoMessageIds((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
+  const handleCopySnippet = (snippetKey: string, text: string) => {
+    void navigator.clipboard?.writeText(text);
+    setCopiedInfoSnippet(snippetKey);
+    if (infoSnippetTimeoutRef.current) {
+      clearTimeout(infoSnippetTimeoutRef.current);
+    }
+    infoSnippetTimeoutRef.current = setTimeout(() => {
+      setCopiedInfoSnippet((curr) => (curr === snippetKey ? null : curr));
+    }, 2000);
   };
   const store = useStore();
   const toolContext = useMemo(() => getJotaiToolContext(store), [store]);
@@ -780,6 +815,7 @@ const ChatPanel = ({ visible }: ChatPanelProps) => {
       id: m.id,
       role: m.role,
       text: m.text,
+      timestamp: m.timestamp,
       isError: m.isError,
       statusText: m.statusText,
       executedTools: m.executedTools,
@@ -936,6 +972,8 @@ const ChatPanel = ({ visible }: ChatPanelProps) => {
         id: m.id,
         role: m.role,
         text: m.text,
+        timestamp:
+          m.timestamp || (Number(m.id) > 1000000000 ? Number(m.id) : undefined),
         isError: m.isError,
         statusText: m.statusText,
         executedTools: m.executedTools,
@@ -1008,6 +1046,9 @@ const ChatPanel = ({ visible }: ChatPanelProps) => {
             id: m.id,
             role: m.role,
             text: m.text,
+            timestamp:
+              m.timestamp ||
+              (Number(m.id) > 1000000000 ? Number(m.id) : undefined),
             isError: m.isError,
             statusText: m.statusText,
             executedTools: m.executedTools,
@@ -1034,10 +1075,12 @@ const ChatPanel = ({ visible }: ChatPanelProps) => {
     if (isClaude && !claudeApiKey) return;
     if (!isClaude && !openAiApiKey) return;
 
+    const now = Date.now();
     const userMsg: Message = {
-      id: String(Date.now()),
+      id: String(now),
       role: "user",
       text: trimmed,
+      timestamp: now,
     };
 
     const placeholderId = `llm-pending-${Date.now()}`;
@@ -1046,6 +1089,7 @@ const ChatPanel = ({ visible }: ChatPanelProps) => {
       role: "llm",
       text: "",
       thinking: true,
+      timestamp: Date.now(),
     };
 
     // append placeholder and clear input immediately
@@ -1132,6 +1176,7 @@ const ChatPanel = ({ visible }: ChatPanelProps) => {
             ...m,
             text: harnessResult.reply,
             thinking: false,
+            timestamp: m.timestamp || Date.now(),
             executedTools: harnessResult.executedTools,
             committedActions:
               allCommittedActions.length > 0 ? allCommittedActions : undefined,
@@ -1150,6 +1195,7 @@ const ChatPanel = ({ visible }: ChatPanelProps) => {
                 text: getVerboseError(err),
                 thinking: false,
                 isError: true,
+                timestamp: m.timestamp || Date.now(),
                 debugInfo: {
                   provider: isClaude
                     ? ("anthropic" as const)
@@ -2191,16 +2237,14 @@ const ChatPanel = ({ visible }: ChatPanelProps) => {
                               type="button"
                               className={clsx(
                                 styles.messageToolbarButton,
-                                (openInfoMessageIds[m.id] ??
-                                  showDebugDetails) &&
+                                activeInfoMessage?.id === m.id &&
                                   styles.messageToolbarButtonActive,
                               )}
-                              onClick={() => toggleMessageInfo(m.id)}
+                              onClick={() => setActiveInfoMessage(m)}
                               aria-label="More information"
                               title="More information about this response"
-                              aria-expanded={
-                                openInfoMessageIds[m.id] ?? showDebugDetails
-                              }
+                              aria-haspopup="dialog"
+                              aria-expanded={activeInfoMessage?.id === m.id}
                             >
                               <InfoIcon
                                 width="0.85em"
@@ -2209,368 +2253,6 @@ const ChatPanel = ({ visible }: ChatPanelProps) => {
                               />
                               <span>More info</span>
                             </button>
-                          </div>
-                        )}
-
-                        {(showDebugDetails || openInfoMessageIds[m.id]) && (
-                          <div className={styles.debugContainer}>
-                            {m.debugInfo ? (
-                              <details
-                                className={styles.debugDetails}
-                                open={
-                                  Boolean(openInfoMessageIds[m.id]) ||
-                                  showDebugDetails
-                                }
-                              >
-                                <summary className={styles.debugSummary}>
-                                  <span className={styles.debugSummaryTitle}>
-                                    Debug & Execution Details
-                                  </span>
-                                  <span className={styles.debugBadge}>
-                                    {m.debugInfo.model}
-                                  </span>
-                                  <span className={styles.debugBadge}>
-                                    {m.debugInfo.provider}
-                                  </span>
-                                  <span className={styles.debugBadge}>
-                                    {m.debugInfo.totalTurns}{" "}
-                                    {m.debugInfo.totalTurns === 1
-                                      ? "round"
-                                      : "rounds"}
-                                  </span>
-                                  <span className={styles.debugBadge}>
-                                    {m.debugInfo.totalSteps}{" "}
-                                    {m.debugInfo.totalSteps === 1
-                                      ? "action"
-                                      : "actions"}
-                                  </span>
-                                  {m.debugInfo.durationMs !== undefined && (
-                                    <span className={styles.debugBadge}>
-                                      {(m.debugInfo.durationMs / 1000).toFixed(
-                                        2,
-                                      )}
-                                      s
-                                    </span>
-                                  )}
-                                </summary>
-                                <div className={styles.debugBody}>
-                                  <details
-                                    className={styles.debugSubDetails}
-                                    open
-                                  >
-                                    <summary className={styles.debugSubSummary}>
-                                      <span>
-                                        Assembled System Prompt & Context
-                                      </span>
-                                      <button
-                                        type="button"
-                                        className={styles.debugCopyBtn}
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          void navigator.clipboard?.writeText(
-                                            m.debugInfo!.systemPrompt,
-                                          );
-                                        }}
-                                      >
-                                        Copy Prompt
-                                      </button>
-                                    </summary>
-                                    <pre className={styles.debugCodeBlock}>
-                                      {m.debugInfo.systemPrompt}
-                                    </pre>
-                                  </details>
-
-                                  {m.debugInfo.turns &&
-                                    m.debugInfo.turns.length > 0 && (
-                                      <details
-                                        className={styles.debugSubDetails}
-                                        open
-                                      >
-                                        <summary
-                                          className={styles.debugSubSummary}
-                                        >
-                                          <span>
-                                            Multi-Turn Execution Log (
-                                            {m.debugInfo.turns.length} rounds)
-                                          </span>
-                                        </summary>
-                                        <div className={styles.turnList}>
-                                          {m.debugInfo.turns.map((turn) => (
-                                            <div
-                                              key={turn.turn}
-                                              className={styles.turnCard}
-                                            >
-                                              <div
-                                                className={styles.turnHeader}
-                                              >
-                                                <span
-                                                  className={styles.stepBadge}
-                                                >
-                                                  Round {turn.turn}
-                                                </span>
-                                                <span
-                                                  className={
-                                                    styles.turnSummaryText
-                                                  }
-                                                >
-                                                  {turn.modelResponse.toolCalls
-                                                    .length > 0
-                                                    ? `${turn.modelResponse.toolCalls.length} tool call(s) requested`
-                                                    : "Direct text response"}
-                                                </span>
-                                              </div>
-                                              {turn.modelResponse.text && (
-                                                <div
-                                                  className={styles.turnSection}
-                                                >
-                                                  <div
-                                                    className={
-                                                      styles.turnSectionLabel
-                                                    }
-                                                  >
-                                                    Model Output:
-                                                  </div>
-                                                  <div
-                                                    className={
-                                                      styles.turnSectionText
-                                                    }
-                                                  >
-                                                    {turn.modelResponse.text}
-                                                  </div>
-                                                </div>
-                                              )}
-                                              {turn.modelResponse.toolCalls
-                                                .length > 0 && (
-                                                <div
-                                                  className={styles.turnSection}
-                                                >
-                                                  <div
-                                                    className={
-                                                      styles.turnSectionLabel
-                                                    }
-                                                  >
-                                                    Requested Tool Invocations:
-                                                  </div>
-                                                  {turn.modelResponse.toolCalls.map(
-                                                    (call) => (
-                                                      <div
-                                                        key={call.id}
-                                                        className={
-                                                          styles.toolCallItem
-                                                        }
-                                                      >
-                                                        <div
-                                                          className={
-                                                            styles.toolCallName
-                                                          }
-                                                        >
-                                                          <code>
-                                                            {call.name}
-                                                          </code>{" "}
-                                                          <span
-                                                            className={
-                                                              styles.toolCallId
-                                                            }
-                                                          >
-                                                            ({call.id})
-                                                          </span>
-                                                        </div>
-                                                        <pre
-                                                          className={
-                                                            styles.debugCodeBlock
-                                                          }
-                                                        >
-                                                          {JSON.stringify(
-                                                            call.arguments,
-                                                            null,
-                                                            2,
-                                                          )}
-                                                        </pre>
-                                                      </div>
-                                                    ),
-                                                  )}
-                                                </div>
-                                              )}
-                                              {turn.toolExecutions &&
-                                                turn.toolExecutions.length >
-                                                  0 && (
-                                                  <div
-                                                    className={
-                                                      styles.turnSection
-                                                    }
-                                                  >
-                                                    <div
-                                                      className={
-                                                        styles.turnSectionLabel
-                                                      }
-                                                    >
-                                                      Tool Execution
-                                                      Observations:
-                                                    </div>
-                                                    {turn.toolExecutions.map(
-                                                      (exec) => (
-                                                        <div
-                                                          key={exec.id}
-                                                          className={
-                                                            styles.toolExecItem
-                                                          }
-                                                        >
-                                                          <div
-                                                            className={
-                                                              styles.toolExecHeader
-                                                            }
-                                                          >
-                                                            <span
-                                                              className={
-                                                                styles.stepBadge
-                                                              }
-                                                            >
-                                                              Step {exec.step}
-                                                            </span>
-                                                            <code>
-                                                              {exec.name}
-                                                            </code>
-                                                            <span
-                                                              className={clsx(
-                                                                styles.statusBadge,
-                                                                exec.result
-                                                                  .success
-                                                                  ? styles.statusSuccess
-                                                                  : styles.statusError,
-                                                              )}
-                                                            >
-                                                              {exec.result
-                                                                .success
-                                                                ? "Success"
-                                                                : "Failed"}
-                                                            </span>
-                                                          </div>
-                                                          <div
-                                                            className={
-                                                              styles.toolExecMessage
-                                                            }
-                                                          >
-                                                            {
-                                                              exec.result
-                                                                .message
-                                                            }
-                                                          </div>
-                                                          {exec.result.data !==
-                                                            undefined && (
-                                                            <pre
-                                                              className={
-                                                                styles.debugCodeBlock
-                                                              }
-                                                            >
-                                                              {JSON.stringify(
-                                                                exec.result
-                                                                  .data,
-                                                                null,
-                                                                2,
-                                                              )}
-                                                            </pre>
-                                                          )}
-                                                          {exec.result
-                                                            .error && (
-                                                            <div
-                                                              className={
-                                                                styles.toolExecError
-                                                              }
-                                                            >
-                                                              {
-                                                                exec.result
-                                                                  .error
-                                                              }
-                                                            </div>
-                                                          )}
-                                                        </div>
-                                                      ),
-                                                    )}
-                                                  </div>
-                                                )}
-                                            </div>
-                                          ))}
-                                        </div>
-                                      </details>
-                                    )}
-
-                                  {m.debugInfo.initialMessages &&
-                                    m.debugInfo.initialMessages.length > 0 && (
-                                      <details
-                                        className={styles.debugSubDetails}
-                                      >
-                                        <summary
-                                          className={styles.debugSubSummary}
-                                        >
-                                          <span>
-                                            Initial Conversation Input (
-                                            {m.debugInfo.initialMessages.length}{" "}
-                                            messages)
-                                          </span>
-                                        </summary>
-                                        <pre className={styles.debugCodeBlock}>
-                                          {JSON.stringify(
-                                            m.debugInfo.initialMessages,
-                                            null,
-                                            2,
-                                          )}
-                                        </pre>
-                                      </details>
-                                    )}
-
-                                  <details className={styles.debugSubDetails}>
-                                    <summary className={styles.debugSubSummary}>
-                                      <span>Raw Diagnostics JSON</span>
-                                      <button
-                                        type="button"
-                                        className={styles.debugCopyBtn}
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          void navigator.clipboard?.writeText(
-                                            JSON.stringify(
-                                              m.debugInfo,
-                                              null,
-                                              2,
-                                            ),
-                                          );
-                                        }}
-                                      >
-                                        Copy JSON
-                                      </button>
-                                    </summary>
-                                    <pre className={styles.debugCodeBlock}>
-                                      {JSON.stringify(m.debugInfo, null, 2)}
-                                    </pre>
-                                  </details>
-                                </div>
-                              </details>
-                            ) : (
-                              <details className={styles.debugDetails} open>
-                                <summary className={styles.debugSummary}>
-                                  <span className={styles.debugSummaryTitle}>
-                                    Response Information
-                                  </span>
-                                  <span className={styles.debugBadge}>
-                                    Assistant
-                                  </span>
-                                  <span className={styles.debugBadge}>
-                                    {m.text.length} chars
-                                  </span>
-                                </summary>
-                                <div className={styles.debugBody}>
-                                  <p
-                                    style={{
-                                      margin: "var(--spacing-2) 0",
-                                      fontSize: "var(--font-size-small)",
-                                    }}
-                                  >
-                                    Standard assistant response. Detailed
-                                    execution logs are recorded during
-                                    multi-turn simulation actions.
-                                  </p>
-                                </div>
-                              </details>
-                            )}
                           </div>
                         )}
                       </div>
@@ -2583,6 +2265,481 @@ const ChatPanel = ({ visible }: ChatPanelProps) => {
           </div>
         )}
       </div>
+
+      {activeInfoMessage &&
+        (() => {
+          const modelId = activeInfoMessage.debugInfo?.model || model;
+          const modelConfig = AVAILABLE_MODELS.find((m) => m.id === modelId);
+          const modelDisplayName = modelConfig?.name || modelId;
+          const provider =
+            activeInfoMessage.debugInfo?.provider ||
+            (modelConfig?.provider ?? (isClaude ? "anthropic" : "openai"));
+          const providerName =
+            provider === "anthropic" ? "Anthropic" : "OpenAI";
+          const timestamp =
+            activeInfoMessage.timestamp ||
+            (Number(activeInfoMessage.id) > 1000000000
+              ? Number(activeInfoMessage.id)
+              : undefined);
+          const dateSentStr = formatMessageDate(timestamp);
+          const usage = activeInfoMessage.debugInfo?.usage;
+          const durationMs = activeInfoMessage.debugInfo?.durationMs;
+
+          return (
+            <div
+              className={styles.infoModalOverlay}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="message-info-title"
+              onClick={(e) => {
+                if (e.target === e.currentTarget) {
+                  setActiveInfoMessage(null);
+                }
+              }}
+            >
+              <div className={styles.infoModalDialog}>
+                <div className={styles.infoModalHeader}>
+                  <div className={styles.infoModalTitle}>
+                    <InfoIcon width="1.1em" height="1.1em" aria-hidden />
+                    <span id="message-info-title">Message Information</span>
+                  </div>
+                  <button
+                    type="button"
+                    className={styles.infoModalCloseBtn}
+                    onClick={() => setActiveInfoMessage(null)}
+                    aria-label="Close message information dialog"
+                    title="Close"
+                  >
+                    <CrossIcon width="0.85em" height="0.85em" aria-hidden />
+                  </button>
+                </div>
+
+                <div className={styles.infoModalBody}>
+                  <div className={styles.infoMetaGrid}>
+                    <div className={styles.infoMetaCard}>
+                      <div className={styles.infoMetaLabel}>Model Used</div>
+                      <div className={styles.infoMetaValue}>
+                        <span>{modelDisplayName}</span>
+                        {modelId !== modelDisplayName && (
+                          <span className={styles.infoSubtext}>
+                            {" "}
+                            ({modelId})
+                          </span>
+                        )}
+                        <span className={styles.debugBadge}>
+                          {providerName}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className={styles.infoMetaCard}>
+                      <div className={styles.infoMetaLabel}>Date Sent</div>
+                      <div className={styles.infoMetaValue}>
+                        <span>{dateSentStr}</span>
+                      </div>
+                    </div>
+
+                    {durationMs !== undefined && (
+                      <div className={styles.infoMetaCard}>
+                        <div className={styles.infoMetaLabel}>
+                          Duration / Latency
+                        </div>
+                        <div className={styles.infoMetaValue}>
+                          <span>{(durationMs / 1000).toFixed(2)}s</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {activeInfoMessage.debugInfo && (
+                      <div className={styles.infoMetaCard}>
+                        <div className={styles.infoMetaLabel}>
+                          Execution Rounds
+                        </div>
+                        <div className={styles.infoMetaValue}>
+                          <span>
+                            {activeInfoMessage.debugInfo.totalTurns}{" "}
+                            {activeInfoMessage.debugInfo.totalTurns === 1
+                              ? "round"
+                              : "rounds"}
+                            , {activeInfoMessage.debugInfo.totalSteps}{" "}
+                            {activeInfoMessage.debugInfo.totalSteps === 1
+                              ? "action"
+                              : "actions"}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className={styles.tokenUsageSection}>
+                    <div className={styles.tokenUsageTitle}>Token Usage</div>
+                    {usage ? (
+                      <div className={styles.tokenGrid}>
+                        <div className={styles.tokenCard}>
+                          <div className={styles.tokenCardValue}>
+                            {usage.promptTokens.toLocaleString()}
+                          </div>
+                          <div className={styles.tokenCardLabel}>
+                            Prompt Tokens
+                          </div>
+                        </div>
+                        <div className={styles.tokenCard}>
+                          <div className={styles.tokenCardValue}>
+                            {usage.completionTokens.toLocaleString()}
+                          </div>
+                          <div className={styles.tokenCardLabel}>
+                            Completion Tokens
+                          </div>
+                        </div>
+                        <div className={styles.tokenCard}>
+                          <div className={styles.tokenCardValue}>
+                            {usage.totalTokens.toLocaleString()}
+                          </div>
+                          <div className={styles.tokenCardLabel}>
+                            Total Tokens
+                          </div>
+                        </div>
+                        {usage.cachedTokens !== undefined &&
+                          usage.cachedTokens > 0 && (
+                            <div className={styles.tokenCard}>
+                              <div className={styles.tokenCardValue}>
+                                {usage.cachedTokens.toLocaleString()}
+                              </div>
+                              <div className={styles.tokenCardLabel}>
+                                Cached Tokens
+                              </div>
+                            </div>
+                          )}
+                      </div>
+                    ) : (
+                      <div className={styles.tokenNotReported}>
+                        Token metrics were not reported by the model provider
+                        for this response.
+                      </div>
+                    )}
+                  </div>
+
+                  <details
+                    className={styles.modalDebugDropdown}
+                    open={showDebugDetails}
+                  >
+                    <summary className={styles.modalDebugSummary}>
+                      <div className={styles.modalDebugSummaryLeft}>
+                        <ChevronDownIcon
+                          className={styles.modalDebugChevron}
+                          width="0.9em"
+                          height="0.9em"
+                          aria-hidden
+                        />
+                        <span className={styles.debugSummaryTitle}>
+                          Debug & Execution Details
+                        </span>
+                      </div>
+                      {activeInfoMessage.debugInfo?.turns && (
+                        <span className={styles.debugBadge}>
+                          {activeInfoMessage.debugInfo.turns.length}{" "}
+                          {activeInfoMessage.debugInfo.turns.length === 1
+                            ? "round"
+                            : "rounds"}
+                        </span>
+                      )}
+                    </summary>
+
+                    <div className={styles.modalDebugContent}>
+                      {activeInfoMessage.debugInfo ? (
+                        <>
+                          <details className={styles.debugSubDetails} open>
+                            <summary className={styles.debugSubSummary}>
+                              <span>Assembled System Prompt & Context</span>
+                              <button
+                                type="button"
+                                className={styles.debugCopyBtn}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCopySnippet(
+                                    "prompt",
+                                    activeInfoMessage.debugInfo!.systemPrompt,
+                                  );
+                                }}
+                              >
+                                {copiedInfoSnippet === "prompt"
+                                  ? "Copied"
+                                  : "Copy Prompt"}
+                              </button>
+                            </summary>
+                            <pre className={styles.debugCodeBlock}>
+                              {activeInfoMessage.debugInfo.systemPrompt}
+                            </pre>
+                          </details>
+
+                          {activeInfoMessage.debugInfo.turns &&
+                            activeInfoMessage.debugInfo.turns.length > 0 && (
+                              <details className={styles.debugSubDetails} open>
+                                <summary className={styles.debugSubSummary}>
+                                  <span>
+                                    Multi-Turn Execution Log (
+                                    {activeInfoMessage.debugInfo.turns.length}{" "}
+                                    rounds)
+                                  </span>
+                                </summary>
+                                <div className={styles.turnList}>
+                                  {activeInfoMessage.debugInfo.turns.map(
+                                    (turn) => (
+                                      <div
+                                        key={turn.turn}
+                                        className={styles.turnCard}
+                                      >
+                                        <div className={styles.turnHeader}>
+                                          <span className={styles.stepBadge}>
+                                            Round {turn.turn}
+                                          </span>
+                                          {turn.usage && (
+                                            <span className={styles.debugBadge}>
+                                              {turn.usage.totalTokens.toLocaleString()}{" "}
+                                              tokens
+                                            </span>
+                                          )}
+                                          <span
+                                            className={styles.turnSummaryText}
+                                          >
+                                            {turn.modelResponse.toolCalls
+                                              .length > 0
+                                              ? `${turn.modelResponse.toolCalls.length} tool call(s) requested`
+                                              : "Direct text response"}
+                                          </span>
+                                        </div>
+                                        {turn.modelResponse.text && (
+                                          <div className={styles.turnSection}>
+                                            <div
+                                              className={
+                                                styles.turnSectionLabel
+                                              }
+                                            >
+                                              Model Output:
+                                            </div>
+                                            <div
+                                              className={styles.turnSectionText}
+                                            >
+                                              {turn.modelResponse.text}
+                                            </div>
+                                          </div>
+                                        )}
+                                        {turn.modelResponse.toolCalls.length >
+                                          0 && (
+                                          <div className={styles.turnSection}>
+                                            <div
+                                              className={
+                                                styles.turnSectionLabel
+                                              }
+                                            >
+                                              Requested Tool Invocations:
+                                            </div>
+                                            {turn.modelResponse.toolCalls.map(
+                                              (call) => (
+                                                <div
+                                                  key={call.id}
+                                                  className={
+                                                    styles.toolCallItem
+                                                  }
+                                                >
+                                                  <div
+                                                    className={
+                                                      styles.toolCallName
+                                                    }
+                                                  >
+                                                    <code>{call.name}</code>{" "}
+                                                    <span
+                                                      className={
+                                                        styles.toolCallId
+                                                      }
+                                                    >
+                                                      ({call.id})
+                                                    </span>
+                                                  </div>
+                                                  <pre
+                                                    className={
+                                                      styles.debugCodeBlock
+                                                    }
+                                                  >
+                                                    {JSON.stringify(
+                                                      call.arguments,
+                                                      null,
+                                                      2,
+                                                    )}
+                                                  </pre>
+                                                </div>
+                                              ),
+                                            )}
+                                          </div>
+                                        )}
+                                        {turn.toolExecutions &&
+                                          turn.toolExecutions.length > 0 && (
+                                            <div className={styles.turnSection}>
+                                              <div
+                                                className={
+                                                  styles.turnSectionLabel
+                                                }
+                                              >
+                                                Tool Execution Observations:
+                                              </div>
+                                              {turn.toolExecutions.map(
+                                                (exec) => (
+                                                  <div
+                                                    key={exec.id}
+                                                    className={
+                                                      styles.toolExecItem
+                                                    }
+                                                  >
+                                                    <div
+                                                      className={
+                                                        styles.toolExecHeader
+                                                      }
+                                                    >
+                                                      <code>{exec.name}</code>{" "}
+                                                      <span
+                                                        className={
+                                                          exec.result
+                                                            .success !== false
+                                                            ? styles.toolSuccess
+                                                            : styles.toolFailure
+                                                        }
+                                                      >
+                                                        {exec.result.success !==
+                                                        false
+                                                          ? "✓ Success"
+                                                          : "✕ Failed"}
+                                                      </span>
+                                                    </div>
+                                                    {exec.description && (
+                                                      <div
+                                                        className={
+                                                          styles.toolExecDesc
+                                                        }
+                                                      >
+                                                        {exec.description}
+                                                      </div>
+                                                    )}
+                                                    <div
+                                                      className={
+                                                        styles.toolExecMessage
+                                                      }
+                                                    >
+                                                      {exec.result.message}
+                                                    </div>
+                                                    {exec.result.data !==
+                                                      undefined && (
+                                                      <pre
+                                                        className={
+                                                          styles.debugCodeBlock
+                                                        }
+                                                      >
+                                                        {JSON.stringify(
+                                                          exec.result.data,
+                                                          null,
+                                                          2,
+                                                        )}
+                                                      </pre>
+                                                    )}
+                                                    {exec.result.error && (
+                                                      <div
+                                                        className={
+                                                          styles.toolExecError
+                                                        }
+                                                      >
+                                                        {exec.result.error}
+                                                      </div>
+                                                    )}
+                                                  </div>
+                                                ),
+                                              )}
+                                            </div>
+                                          )}
+                                      </div>
+                                    ),
+                                  )}
+                                </div>
+                              </details>
+                            )}
+
+                          {activeInfoMessage.debugInfo.initialMessages &&
+                            activeInfoMessage.debugInfo.initialMessages.length >
+                              0 && (
+                              <details className={styles.debugSubDetails}>
+                                <summary className={styles.debugSubSummary}>
+                                  <span>
+                                    Initial Conversation Input (
+                                    {
+                                      activeInfoMessage.debugInfo
+                                        .initialMessages.length
+                                    }{" "}
+                                    messages)
+                                  </span>
+                                </summary>
+                                <pre className={styles.debugCodeBlock}>
+                                  {JSON.stringify(
+                                    activeInfoMessage.debugInfo.initialMessages,
+                                    null,
+                                    2,
+                                  )}
+                                </pre>
+                              </details>
+                            )}
+
+                          <details className={styles.debugSubDetails}>
+                            <summary className={styles.debugSubSummary}>
+                              <span>Raw Diagnostics JSON</span>
+                              <button
+                                type="button"
+                                className={styles.debugCopyBtn}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCopySnippet(
+                                    "json",
+                                    JSON.stringify(
+                                      activeInfoMessage.debugInfo,
+                                      null,
+                                      2,
+                                    ),
+                                  );
+                                }}
+                              >
+                                {copiedInfoSnippet === "json"
+                                  ? "Copied"
+                                  : "Copy JSON"}
+                              </button>
+                            </summary>
+                            <pre className={styles.debugCodeBlock}>
+                              {JSON.stringify(
+                                activeInfoMessage.debugInfo,
+                                null,
+                                2,
+                              )}
+                            </pre>
+                          </details>
+                        </>
+                      ) : (
+                        <div className={styles.emptyDebugState}>
+                          Standard assistant response. Detailed execution logs
+                          are recorded during multi-turn simulation actions.
+                        </div>
+                      )}
+                    </div>
+                  </details>
+                </div>
+
+                <div className={styles.infoModalFooter}>
+                  <button
+                    type="button"
+                    className={styles.infoModalDismissBtn}
+                    onClick={() => setActiveInfoMessage(null)}
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
     </div>
   );
 };
