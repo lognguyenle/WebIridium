@@ -546,59 +546,6 @@
   background-clip: padding-box;
 }
 
-/* Copied from HistoryPanel.module.css button */
-.history-item {
-  display: flex;
-  flex-direction: row;
-  gap: var(--spacing-3);
-
-  color: var(--color-button-fg);
-  background-color: var(--color-button-bg);
-  border: var(--border-button);
-  border-radius: var(--border-radius);
-  padding: var(--spacing-3);
-  cursor: pointer;
-  text-align: left;
-
-  &:hover {
-    background-color: var(--color-button-bg-hover);
-  }
-
-  &:active {
-    background-color: var(--color-button-bg-active);
-  }
-
-  &:disabled {
-    cursor: not-allowed;
-    opacity: 0.6;
-  }
-}
-
-.history-main {
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-}
-
-.history-subtitle {
-  color: var(--color-button-fg-dim);
-}
-
-.history-check {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.history-list {
-  margin-top: var(--spacing-3);
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-2);
-  list-style: none;
-}
-
 .settings-header {
   display: flex;
   align-items: center;

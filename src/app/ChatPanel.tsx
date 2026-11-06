@@ -29,7 +29,6 @@ import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
 
 import SettingsIcon from "@/assets/icons/SettingsIcon.svg?react";
-import HistoryIcon from "@/assets/icons/HistoryIcon.svg?react";
 import PlusIcon from "@/assets/icons/PlusIcon.svg?react";
 import CheckIcon from "@/assets/icons/CheckIcon.svg?react";
 import SendIcon from "@/assets/icons/SendIcon.svg?react";
@@ -71,65 +70,6 @@ type Message = {
   executedTools?: ExecutedToolRecord[];
   committedActions?: CommittedActionRecord[];
   debugInfo?: AgentDebugInfo;
-};
-
-const ConversationItem = ({
-  conv,
-  selected,
-  setMessages,
-  setShowHistory,
-  setActiveConversation,
-  disabled,
-}: {
-  conv: ChatConversation;
-  selected: boolean;
-  setMessages: (to: Message[]) => void;
-  setShowHistory: (to: boolean) => void;
-  setActiveConversation: (to: ChatConversation) => void;
-  disabled?: boolean;
-}) => {
-  const [timestampMs, setTimestampMs] = useState(() => Date.now());
-  const time = timeToAgoText(timestampMs - conv.unixTimestampMs).toLowerCase();
-
-  useEffect(() => {
-    const id = setInterval(() => {
-      setTimestampMs(Date.now());
-    }, 60 * 1_000);
-
-    return () => clearInterval(id);
-  }, []);
-
-  return (
-    <button
-      key={conv.id}
-      className={styles.historyItem}
-      onClick={() => {
-        setMessages(
-          conv.messages.map((m) => ({
-            id: m.id,
-            role: m.role,
-            text: m.text,
-            isError: m.isError,
-            statusText: m.statusText,
-            executedTools: m.executedTools,
-            committedActions: m.committedActions,
-          })),
-        );
-        setShowHistory(false);
-        setActiveConversation(conv);
-      }}
-      disabled={disabled}
-    >
-      <div className={styles.historyMain}>
-        <span className={styles.historyTitle}>{conv.title}</span>
-        <span className={styles.historySubtitle}>{time}</span>
-      </div>
-
-      <div className={styles.historyCheck}>
-        {selected && <CheckIcon width="1em" height="1em" aria-hidden />}
-      </div>
-    </button>
-  );
 };
 
 const PastConversationCard = ({
@@ -640,7 +580,6 @@ const ChatPanel = ({ visible }: ChatPanelProps) => {
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
 
   const [viewMode, setViewMode] = useState<"startup" | "chat">("startup");
-  const [showHistory, setShowHistory] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [chatHistory] = useAtom(chatHistoryAtom);
   const [confirmToolActions, setConfirmToolActions] = useAtom(
@@ -911,14 +850,8 @@ const ChatPanel = ({ visible }: ChatPanelProps) => {
     }
   };
 
-  const toggleHistory = () => {
-    setShowHistory((show) => !show);
-    setShowSettings(false);
-  };
-
   const toggleSettings = () => {
     setShowSettings((show) => !show);
-    setShowHistory(false);
   };
 
   const handleDeleteConversation = () => {
@@ -975,7 +908,6 @@ const ChatPanel = ({ visible }: ChatPanelProps) => {
         debugInfo: m.debugInfo,
       })),
     );
-    setShowHistory(false);
     setActiveConversation(conv);
   };
 
@@ -1345,16 +1277,6 @@ const ChatPanel = ({ visible }: ChatPanelProps) => {
           />
           <button
             className={styles.titleButton}
-            aria-expanded={showHistory}
-            aria-label="Chat History"
-            onClick={toggleHistory}
-          >
-            <Tooltip text="Chat History">
-              <HistoryIcon height="0.75em" width="0.75em" />
-            </Tooltip>
-          </button>
-          <button
-            className={styles.titleButton}
             aria-expanded={showSettings}
             aria-label="Chat Settings"
             onClick={toggleSettings}
@@ -1415,32 +1337,6 @@ const ChatPanel = ({ visible }: ChatPanelProps) => {
             onClose={() => setShowSettings(false)}
             waitingForReply={waitingForReply}
           />
-        ) : null}
-
-        {showHistory ? (
-          <div className={styles.settingsPanel}>
-            <div className={styles.historyList}>
-              {chatHistory.length === 0 ? (
-                <div className={styles.settingsNote}>
-                  No saved conversations
-                </div>
-              ) : (
-                chatHistory
-                  .slice()
-                  .reverse()
-                  .map((conv) => (
-                    <ConversationItem
-                      selected={conv === activeConversation}
-                      conv={conv}
-                      setMessages={setMessages}
-                      setActiveConversation={setActiveConversation}
-                      setShowHistory={setShowHistory}
-                      disabled={waitingForReply}
-                    />
-                  ))
-              )}
-            </div>
-          </div>
         ) : null}
 
         <div className={styles.chatContent}>
