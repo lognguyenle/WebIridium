@@ -333,11 +333,17 @@ const ChatSettings = ({
   };
 
   return (
-    <div className={styles.settingsPanel}>
+        <div className={styles.settingsPanel}>
       <div className={styles.settingsHeader}>
         <h3 className={styles.settingsTitle}>Settings</h3>
-        <button className={styles.closeButton} onClick={onClose}>
-          Close
+        <button
+          type="button"
+          className={styles.closeButton}
+          onClick={onClose}
+          aria-label="Close settings"
+        >
+          <CrossIcon width="0.85em" height="0.85em" aria-hidden />
+          <span>Close</span>
         </button>
       </div>
 
@@ -1258,12 +1264,15 @@ const ChatPanel = ({ visible }: ChatPanelProps) => {
             aria-label="Import conversation file"
           />
           <button
-            className={styles.titleButton}
-            aria-expanded={showSettings}
-            aria-label="Chat Settings"
+            className={clsx(
+            styles.titleButton,
+            showSettings && styles.titleButtonActive,
+          )}
+          aria-expanded={showSettings}
+          aria-label="Chat Settings"
             onClick={toggleSettings}
           >
-            <Tooltip text="Chat Settings">
+            <Tooltip text={showSettings ? "Close Settings" : "Chat Settings"}>
               <SettingsIcon height="0.75em" width="0.75em" />
             </Tooltip>
           </button>
@@ -1295,7 +1304,7 @@ const ChatPanel = ({ visible }: ChatPanelProps) => {
         </div>
       )}
 
-      <div className={styles.chatBox} role="region" aria-label="Chat panel">
+            <div className={styles.chatBox} role="region" aria-label="Chat panel">
         {showSettings ? (
           <ChatSettings
             openAiApiKey={openAiApiKey}
@@ -1309,9 +1318,8 @@ const ChatPanel = ({ visible }: ChatPanelProps) => {
             onClose={() => setShowSettings(false)}
             waitingForReply={waitingForReply}
           />
-        ) : null}
-
-        <div className={styles.chatContent}>
+        ) : (
+          <div className={styles.chatContent}>
           {viewMode === "chat" && (
             <div className={styles.conversationTitleBar}>
               <button
@@ -2346,10 +2354,11 @@ const ChatPanel = ({ visible }: ChatPanelProps) => {
                   </div>
                 ))}
               </div>
-              {renderInputRow(false)}
+                            {renderInputRow(false)}
             </>
           )}
         </div>
+        )}
       </div>
     </div>
   );

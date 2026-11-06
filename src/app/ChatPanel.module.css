@@ -66,12 +66,14 @@
 .settings-panel {
   display: flex;
   flex-direction: column;
+  flex: 1 1 auto;
+  height: 100%;
+  width: 100%;
+  min-height: 0;
   gap: var(--spacing-4);
   padding: var(--spacing-4);
-  border-bottom: 1px solid var(--color-layer2-border);
-  background: color-mix(in oklch, var(--color-layer1-bg) 95%, transparent);
+  background: var(--color-layer1-bg);
   overflow-y: auto;
-  height: 150%;
   scrollbar-width: thin;
 }
 
@@ -550,28 +552,36 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--spacing-3);
+  padding-bottom: var(--spacing-2);
+  border-bottom: 1px solid var(--color-layer2-border);
+  margin-bottom: var(--spacing-1);
+  flex-shrink: 0;
 }
 
 .settings-title {
   margin: 0;
   font-size: var(--font-size-medium);
-  font-weight: bold;
+  font-weight: 600;
   color: var(--color-layer1-fg);
 }
 
 .close-button {
-  background: none;
-  border: none;
-  color: var(--color-layer1-fg);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-1);
+  background: var(--color-button-bg);
+  color: var(--color-button-fg);
+  border: var(--border-button);
+  border-radius: var(--border-radius);
   cursor: pointer;
   font-size: var(--font-size-small);
-  padding: var(--spacing-1);
-  opacity: 0.7;
+  padding: var(--spacing-1) var(--spacing-3);
+  line-height: 1.4;
+  transition: background-color 0.15s ease;
 }
 
 .close-button:hover {
-  opacity: 1;
+  background: var(--color-button-bg-hover);
 }
 
 .settings-section {
