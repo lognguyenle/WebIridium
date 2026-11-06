@@ -335,7 +335,7 @@ const ChatSettings = ({
   };
 
   return (
-        <div className={styles.settingsPanel}>
+    <div className={styles.settingsPanel}>
       <div className={styles.settingsHeader}>
         <h3 className={styles.settingsTitle}>Settings</h3>
         <button
@@ -1298,11 +1298,11 @@ const ChatPanel = ({ visible }: ChatPanelProps) => {
           />
           <button
             className={clsx(
-            styles.titleButton,
-            showSettings && styles.titleButtonActive,
-          )}
-          aria-expanded={showSettings}
-          aria-label="Chat Settings"
+              styles.titleButton,
+              showSettings && styles.titleButtonActive,
+            )}
+            aria-expanded={showSettings}
+            aria-label="Chat Settings"
             onClick={toggleSettings}
           >
             <Tooltip text={showSettings ? "Close Settings" : "Chat Settings"}>
@@ -1337,7 +1337,7 @@ const ChatPanel = ({ visible }: ChatPanelProps) => {
         </div>
       )}
 
-            <div className={styles.chatBox} role="region" aria-label="Chat panel">
+      <div className={styles.chatBox} role="region" aria-label="Chat panel">
         {showSettings ? (
           <ChatSettings
             openAiApiKey={openAiApiKey}
@@ -1353,1131 +1353,1234 @@ const ChatPanel = ({ visible }: ChatPanelProps) => {
           />
         ) : (
           <div className={styles.chatContent}>
-          {viewMode === "chat" && (
-            <div className={styles.conversationTitleBar}>
-              <button
-                type="button"
-                className={styles.backButton}
-                onClick={handleBackToStartup}
-                aria-label="Back to conversations"
-                title="Back to conversations"
-              >
-                <ChevronDownIcon
-                  width="0.85em"
-                  height="0.85em"
-                  style={{ transform: "rotate(90deg)" }}
-                  aria-hidden
-                />
-                <span>All Chats</span>
-              </button>
-
-              <div className={styles.conversationTitleDivider} />
-
-              {renameInput === null ? (
+            {viewMode === "chat" && (
+              <div className={styles.conversationTitleBar}>
                 <button
                   type="button"
-                  className={styles.conversationTitleTrigger}
-                  onClick={() => {
-                    if (activeConversation) {
-                      setRenameInput(activeConversation.title ?? "");
-                    }
-                  }}
-                  disabled={!activeConversation}
+                  className={styles.backButton}
+                  onClick={handleBackToStartup}
+                  aria-label="Back to conversations"
+                  title="Back to conversations"
                 >
-                  <span className={styles.conversationTitleText}>
-                    {activeConversation?.title || "New Conversation"}
-                  </span>
-                  {activeConversation && (
-                    <PencilIcon
-                      className={styles.conversationTitlePencil}
-                      width="0.85em"
-                      height="0.85em"
-                    />
-                  )}
-                </button>
-              ) : (
-                <div className={styles.conversationTitleInputContainer}>
-                  <input
-                    ref={renameInputRef}
-                    type="text"
-                    placeholder="Conversation name"
-                    className={styles.conversationTitleInput}
-                    autoFocus
-                    autoComplete="off"
-                    value={renameInput}
-                    onFocus={(e) => e.target.select()}
-                    onBlur={() => setRenameInput(null)}
-                    onChange={(e) => setRenameInput(e.target.value)}
-                    onKeyDown={handleRenameKeyDown}
+                  <ChevronDownIcon
+                    width="0.85em"
+                    height="0.85em"
+                    style={{ transform: "rotate(90deg)" }}
+                    aria-hidden
                   />
-                  <IconButton
-                    label="Confirm"
-                    onClick={confirmRename}
-                    onPointerDown={(e) => e.preventDefault()}
-                  >
-                    <CheckIcon width="1em" height="1em" />
-                  </IconButton>
-                  <IconButton
-                    label="Cancel"
-                    onClick={() => renameInputRef.current?.blur()}
-                    onPointerDown={(e) => e.preventDefault()}
-                  >
-                    <CrossIcon width="1em" height="1em" />
-                  </IconButton>
-                </div>
-              )}
-            </div>
-          )}
+                  <span>All Chats</span>
+                </button>
 
-          {viewMode === "startup" ? (
-            !hasAnyApiKey ? (
-              <ChatEntryPage
-                openAiApiKey={openAiApiKey}
-                setOpenAiApiKey={setOpenAiApiKey}
-                claudeApiKey={claudeApiKey}
-                setClaudeApiKey={setClaudeApiKey}
-                chatHistory={chatHistory}
-                onSelectConversation={handleSelectConversation}
-                onDeleteConversation={(conv) => setConversationToDelete(conv)}
-                waitingForReply={waitingForReply}
-                scrollRef={messagesRef}
-                onScroll={handleScroll}
-              />
-            ) : (
-              <div
-                className={styles.messages}
-                ref={messagesRef}
-                onScroll={handleScroll}
-                data-testid="chat-messages-container"
-              >
-                <div className={styles.emptyChatContainer}>
+                <div className={styles.conversationTitleDivider} />
+
+                {renameInput === null ? (
                   <button
                     type="button"
-                    className={styles.newChatOption}
-                    onClick={handleOpenNewChatPage}
-                    disabled={waitingForReply}
-                    aria-label="Start new conversation"
+                    className={styles.conversationTitleTrigger}
+                    onClick={() => {
+                      if (activeConversation) {
+                        setRenameInput(activeConversation.title ?? "");
+                      }
+                    }}
+                    disabled={!activeConversation}
                   >
-                    <div className={styles.newChatIconContainer}>
-                      <PlusIcon width="1.1em" height="1.1em" aria-hidden />
-                    </div>
-                    <div className={styles.newChatTextContainer}>
-                      <span className={styles.newChatTitle}>
-                        New Conversation
-                      </span>
-                      <span className={styles.newChatSubtitle}>
-                        Start a fresh chat with the assistant
-                      </span>
-                    </div>
+                    <span className={styles.conversationTitleText}>
+                      {activeConversation?.title || "New Conversation"}
+                    </span>
+                    {activeConversation && (
+                      <PencilIcon
+                        className={styles.conversationTitlePencil}
+                        width="0.85em"
+                        height="0.85em"
+                      />
+                    )}
                   </button>
+                ) : (
+                  <div className={styles.conversationTitleInputContainer}>
+                    <input
+                      ref={renameInputRef}
+                      type="text"
+                      placeholder="Conversation name"
+                      className={styles.conversationTitleInput}
+                      autoFocus
+                      autoComplete="off"
+                      value={renameInput}
+                      onFocus={(e) => e.target.select()}
+                      onBlur={() => setRenameInput(null)}
+                      onChange={(e) => setRenameInput(e.target.value)}
+                      onKeyDown={handleRenameKeyDown}
+                    />
+                    <IconButton
+                      label="Confirm"
+                      onClick={confirmRename}
+                      onPointerDown={(e) => e.preventDefault()}
+                    >
+                      <CheckIcon width="1em" height="1em" />
+                    </IconButton>
+                    <IconButton
+                      label="Cancel"
+                      onClick={() => renameInputRef.current?.blur()}
+                      onPointerDown={(e) => e.preventDefault()}
+                    >
+                      <CrossIcon width="1em" height="1em" />
+                    </IconButton>
+                  </div>
+                )}
+              </div>
+            )}
 
-                  <div className={styles.pastConversationsSection}>
-                    <div className={styles.pastConversationsHeader}>
-                      <span className={styles.pastConversationsTitle}>
-                        Past Conversations
-                      </span>
-                      {chatHistory.length > 0 && (
-                        <span className={styles.pastConversationsCount}>
-                          {chatHistory.length}
+            {viewMode === "startup" ? (
+              !hasAnyApiKey ? (
+                <ChatEntryPage
+                  openAiApiKey={openAiApiKey}
+                  setOpenAiApiKey={setOpenAiApiKey}
+                  claudeApiKey={claudeApiKey}
+                  setClaudeApiKey={setClaudeApiKey}
+                  chatHistory={chatHistory}
+                  onSelectConversation={handleSelectConversation}
+                  onDeleteConversation={(conv) => setConversationToDelete(conv)}
+                  waitingForReply={waitingForReply}
+                  scrollRef={messagesRef}
+                  onScroll={handleScroll}
+                />
+              ) : (
+                <div
+                  className={styles.messages}
+                  ref={messagesRef}
+                  onScroll={handleScroll}
+                  data-testid="chat-messages-container"
+                >
+                  <div className={styles.emptyChatContainer}>
+                    <button
+                      type="button"
+                      className={styles.newChatOption}
+                      onClick={handleOpenNewChatPage}
+                      disabled={waitingForReply}
+                      aria-label="Start new conversation"
+                    >
+                      <div className={styles.newChatIconContainer}>
+                        <PlusIcon width="1.1em" height="1.1em" aria-hidden />
+                      </div>
+                      <div className={styles.newChatTextContainer}>
+                        <span className={styles.newChatTitle}>
+                          New Conversation
                         </span>
+                        <span className={styles.newChatSubtitle}>
+                          Start a fresh chat with the assistant
+                        </span>
+                      </div>
+                    </button>
+
+                    <div className={styles.pastConversationsSection}>
+                      <div className={styles.pastConversationsHeader}>
+                        <span className={styles.pastConversationsTitle}>
+                          Past Conversations
+                        </span>
+                        {chatHistory.length > 0 && (
+                          <span className={styles.pastConversationsCount}>
+                            {chatHistory.length}
+                          </span>
+                        )}
+                      </div>
+
+                      {chatHistory.length === 0 ? (
+                        <div className={styles.emptyHistoryPlaceholder}>
+                          <span className={styles.emptyHistoryTitle}>
+                            No past conversations yet
+                          </span>
+                          <span className={styles.emptyHistoryHint}>
+                            Click New Conversation above to start a chat.
+                          </span>
+                        </div>
+                      ) : (
+                        <div className={styles.pastConversationsList}>
+                          {chatHistory
+                            .slice()
+                            .reverse()
+                            .map((conv) => (
+                              <PastConversationCard
+                                key={conv.id}
+                                conv={conv}
+                                onSelect={() => handleSelectConversation(conv)}
+                                onDelete={() => setConversationToDelete(conv)}
+                                disabled={waitingForReply}
+                              />
+                            ))}
+                        </div>
                       )}
                     </div>
-
-                    {chatHistory.length === 0 ? (
-                      <div className={styles.emptyHistoryPlaceholder}>
-                        <span className={styles.emptyHistoryTitle}>
-                          No past conversations yet
-                        </span>
-                        <span className={styles.emptyHistoryHint}>
-                          Click New Conversation above to start a chat.
-                        </span>
-                      </div>
-                    ) : (
-                      <div className={styles.pastConversationsList}>
-                        {chatHistory
-                          .slice()
-                          .reverse()
-                          .map((conv) => (
-                            <PastConversationCard
-                              key={conv.id}
-                              conv={conv}
-                              onSelect={() => handleSelectConversation(conv)}
-                              onDelete={() => setConversationToDelete(conv)}
-                              disabled={waitingForReply}
-                            />
-                          ))}
-                      </div>
-                    )}
+                  </div>
+                </div>
+              )
+            ) : messages.length === 0 ? (
+              <div
+                className={styles.newChatCenterWrapper}
+                ref={messagesRef}
+                onScroll={handleScroll}
+                data-testid="new-chat-center-wrapper"
+              >
+                <div className={styles.newChatEmptyState}>
+                  <div className={styles.newChatEmptyIcon}>
+                    <RobotIcon width="2.2em" height="2.2em" />
+                  </div>
+                  <h3 className={styles.newChatEmptyTitle}>New Conversation</h3>
+                  <p className={styles.newChatEmptySubtitle}>
+                    Type a message below to begin chatting with the assistant.
+                  </p>
+                  <div className={styles.newChatInputContainer}>
+                    {renderInputRow(true)}
                   </div>
                 </div>
               </div>
-            )
-          ) : messages.length === 0 ? (
-            <div
-              className={styles.newChatCenterWrapper}
-              ref={messagesRef}
-              onScroll={handleScroll}
-              data-testid="new-chat-center-wrapper"
-            >
-              <div className={styles.newChatEmptyState}>
-                <div className={styles.newChatEmptyIcon}>
-                  <RobotIcon width="2.2em" height="2.2em" />
-                </div>
-                <h3 className={styles.newChatEmptyTitle}>New Conversation</h3>
-                <p className={styles.newChatEmptySubtitle}>
-                  Type a message below to begin chatting with the assistant.
-                </p>
-                <div className={styles.newChatInputContainer}>
-                  {renderInputRow(true)}
-                </div>
-              </div>
-            </div>
-          ) : (
-            <>
-              <div
-                className={styles.messages}
-                ref={messagesRef}
-                onScroll={handleScroll}
-                data-testid="chat-messages-container"
-              >
-                {messages.map((m) => (
-                  <div
-                    key={m.id}
-                    className={
-                      styles.message +
-                      " " +
-                      (m.role === "user"
-                        ? styles.messageUser
-                        : styles.messageLlm)
-                    }
-                  >
+            ) : (
+              <>
+                <div
+                  className={styles.messages}
+                  ref={messagesRef}
+                  onScroll={handleScroll}
+                  data-testid="chat-messages-container"
+                >
+                  {messages.map((m) => (
                     <div
-                      data-testid="chat-message"
-                      className={clsx(
-                        styles.messageBubble,
-                        m.thinking && styles.thinkingBubble,
-                        m.isError && styles.errorBubble,
-                      )}
+                      key={m.id}
+                      className={
+                        styles.message +
+                        " " +
+                        (m.role === "user"
+                          ? styles.messageUser
+                          : styles.messageLlm)
+                      }
                     >
-                      {m.executedTools &&
-                        m.executedTools.length > 0 &&
-                        (() => {
-                          const totalRounds = Math.max(
-                            ...m.executedTools.map((t) => t.turn ?? 1),
-                          );
-                          return (
-                            <div className={styles.toolActionList}>
-                              {m.executedTools.length > 1 && (
-                                <div className={styles.toolActionsSummary}>
-                                  <span>
-                                    {m.executedTools.length} actions executed
-                                    across {totalRounds}{" "}
-                                    {totalRounds === 1 ? "round" : "rounds"}
-                                  </span>
-                                </div>
-                              )}
-                              {m.executedTools.map((tool, idx) => {
-                                const isSuccess = tool.result.success !== false;
-                                const stepNum = tool.step ?? idx + 1;
-                                const hasArguments =
-                                  tool.arguments &&
-                                  Object.keys(tool.arguments).length > 0;
-                                const hasData = tool.result.data !== undefined;
+                      <div
+                        data-testid="chat-message"
+                        className={clsx(
+                          styles.messageBubble,
+                          m.thinking && styles.thinkingBubble,
+                          m.isError && styles.errorBubble,
+                        )}
+                      >
+                        {m.executedTools &&
+                          m.executedTools.length > 0 &&
+                          (() => {
+                            const totalRounds = Math.max(
+                              ...m.executedTools.map((t) => t.turn ?? 1),
+                            );
+                            return (
+                              <div className={styles.toolActionList}>
+                                {m.executedTools.length > 1 && (
+                                  <div className={styles.toolActionsSummary}>
+                                    <span>
+                                      {m.executedTools.length} actions executed
+                                      across {totalRounds}{" "}
+                                      {totalRounds === 1 ? "round" : "rounds"}
+                                    </span>
+                                  </div>
+                                )}
+                                {m.executedTools.map((tool, idx) => {
+                                  const isSuccess =
+                                    tool.result.success !== false;
+                                  const stepNum = tool.step ?? idx + 1;
+                                  const hasArguments =
+                                    tool.arguments &&
+                                    Object.keys(tool.arguments).length > 0;
+                                  const hasData =
+                                    tool.result.data !== undefined;
+
+                                  return (
+                                    <div
+                                      key={tool.id || `${tool.name}-${idx}`}
+                                      className={clsx(
+                                        styles.toolActionCard,
+                                        !isSuccess &&
+                                          styles.toolActionCardError,
+                                      )}
+                                    >
+                                      <div className={styles.toolActionHeader}>
+                                        <span className={styles.stepBadge}>
+                                          Step {stepNum}
+                                        </span>
+                                        {tool.turn && tool.turn > 1 && (
+                                          <span className={styles.turnBadge}>
+                                            Round {tool.turn}
+                                          </span>
+                                        )}
+                                        <span className={styles.toolActionName}>
+                                          {tool.name}
+                                        </span>
+                                        <span
+                                          className={clsx(
+                                            styles.statusBadge,
+                                            isSuccess
+                                              ? styles.statusSuccess
+                                              : styles.statusError,
+                                          )}
+                                        >
+                                          {isSuccess ? "Success" : "Failed"}
+                                        </span>
+                                      </div>
+                                      <div className={styles.toolActionMessage}>
+                                        {tool.result.message}
+                                      </div>
+                                      {(hasArguments || hasData) && (
+                                        <details className={styles.toolDetails}>
+                                          <summary
+                                            className={
+                                              styles.toolDetailsSummary
+                                            }
+                                          >
+                                            View Parameters & Output
+                                          </summary>
+                                          <div
+                                            className={styles.toolDetailsBody}
+                                          >
+                                            {hasArguments && (
+                                              <div>
+                                                <div
+                                                  className={
+                                                    styles.toolSectionLabel
+                                                  }
+                                                >
+                                                  Input Parameters
+                                                </div>
+                                                <pre
+                                                  className={
+                                                    styles.toolCodeBlock
+                                                  }
+                                                >
+                                                  {JSON.stringify(
+                                                    tool.arguments,
+                                                    null,
+                                                    2,
+                                                  )}
+                                                </pre>
+                                              </div>
+                                            )}
+                                            {hasData && (
+                                              <div>
+                                                <div
+                                                  className={
+                                                    styles.toolSectionLabel
+                                                  }
+                                                >
+                                                  Returned Data
+                                                </div>
+                                                <pre
+                                                  className={
+                                                    styles.toolCodeBlock
+                                                  }
+                                                >
+                                                  {JSON.stringify(
+                                                    tool.result.data,
+                                                    null,
+                                                    2,
+                                                  )}
+                                                </pre>
+                                              </div>
+                                            )}
+                                          </div>
+                                        </details>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            );
+                          })()}
+                        {m.committedActions &&
+                          m.committedActions.length > 0 && (
+                            <div className={styles.committedActionsList}>
+                              {m.committedActions.map((action) => {
+                                const canRevert =
+                                  action.status === "committed" &&
+                                  Boolean(action.revertData);
+                                const canReapply = action.status === "reverted";
+                                const isReverting =
+                                  revertingActionId === action.id;
 
                                 return (
                                   <div
-                                    key={tool.id || `${tool.name}-${idx}`}
+                                    key={action.id}
                                     className={clsx(
-                                      styles.toolActionCard,
-                                      !isSuccess && styles.toolActionCardError,
+                                      styles.committedActionCard,
+                                      action.status === "committed" &&
+                                        styles.actionStatusCommitted,
+                                      action.status === "discarded" &&
+                                        styles.actionStatusDiscarded,
+                                      action.status === "reverted" &&
+                                        styles.actionStatusReverted,
                                     )}
                                   >
-                                    <div className={styles.toolActionHeader}>
-                                      <span className={styles.stepBadge}>
-                                        Step {stepNum}
+                                    <div
+                                      className={styles.committedActionHeader}
+                                    >
+                                      <span
+                                        className={styles.committedActionTitle}
+                                      >
+                                        {action.status === "committed"
+                                          ? "Committed Action"
+                                          : action.status === "reverted"
+                                            ? "Reverted Action"
+                                            : "Discarded Action"}
                                       </span>
-                                      {tool.turn && tool.turn > 1 && (
-                                        <span className={styles.turnBadge}>
-                                          Round {tool.turn}
-                                        </span>
-                                      )}
-                                      <span className={styles.toolActionName}>
-                                        {tool.name}
+                                      <span
+                                        className={
+                                          styles.committedActionToolName
+                                        }
+                                      >
+                                        {action.toolName}
                                       </span>
                                       <span
                                         className={clsx(
-                                          styles.statusBadge,
-                                          isSuccess
-                                            ? styles.statusSuccess
-                                            : styles.statusError,
+                                          styles.actionStatusBadge,
+                                          action.status === "committed" &&
+                                            styles.badgeCommitted,
+                                          action.status === "discarded" &&
+                                            styles.badgeDiscarded,
+                                          action.status === "reverted" &&
+                                            styles.badgeReverted,
                                         )}
                                       >
-                                        {isSuccess ? "Success" : "Failed"}
+                                        {action.status === "committed"
+                                          ? "Committed"
+                                          : action.status === "reverted"
+                                            ? "Reverted"
+                                            : "Discarded"}
                                       </span>
                                     </div>
-                                    <div className={styles.toolActionMessage}>
-                                      {tool.result.message}
-                                    </div>
-                                    {(hasArguments || hasData) && (
-                                      <details className={styles.toolDetails}>
-                                        <summary
-                                          className={styles.toolDetailsSummary}
-                                        >
-                                          View Parameters & Output
-                                        </summary>
-                                        <div className={styles.toolDetailsBody}>
-                                          {hasArguments && (
-                                            <div>
-                                              <div
+                                    <p
+                                      className={
+                                        styles.committedActionDescription
+                                      }
+                                    >
+                                      {action.description}
+                                    </p>
+                                    {action.changes &&
+                                      action.changes.length > 0 && (
+                                        <div className={styles.changeTable}>
+                                          <div
+                                            className={styles.changeTableHeader}
+                                          >
+                                            <span>Property</span>
+                                            <span>Current</span>
+                                            <span></span>
+                                            <span>Proposed</span>
+                                          </div>
+                                          {action.changes.map((c, idx) => (
+                                            <div
+                                              key={idx}
+                                              className={styles.changeTableRow}
+                                            >
+                                              <span
+                                                className={styles.changeField}
+                                              >
+                                                {c.field}
+                                              </span>
+                                              <span
+                                                className={styles.changeCurrent}
+                                              >
+                                                {c.currentValue}
+                                              </span>
+                                              <span
+                                                className={styles.changeArrow}
+                                              >
+                                                -&gt;
+                                              </span>
+                                              <span
                                                 className={
-                                                  styles.toolSectionLabel
+                                                  styles.changeProposed
                                                 }
                                               >
-                                                Input Parameters
-                                              </div>
-                                              <pre
-                                                className={styles.toolCodeBlock}
-                                              >
-                                                {JSON.stringify(
-                                                  tool.arguments,
-                                                  null,
-                                                  2,
-                                                )}
-                                              </pre>
+                                                {c.proposedValue}
+                                              </span>
                                             </div>
-                                          )}
-                                          {hasData && (
-                                            <div>
-                                              <div
-                                                className={
-                                                  styles.toolSectionLabel
-                                                }
-                                              >
-                                                Returned Data
-                                              </div>
-                                              <pre
-                                                className={styles.toolCodeBlock}
-                                              >
-                                                {JSON.stringify(
-                                                  tool.result.data,
-                                                  null,
-                                                  2,
-                                                )}
-                                              </pre>
-                                            </div>
-                                          )}
+                                          ))}
                                         </div>
-                                      </details>
+                                      )}
+                                    {action.consequences &&
+                                      action.consequences.length > 0 && (
+                                        <div
+                                          className={
+                                            styles.consequencesContainer
+                                          }
+                                        >
+                                          <span
+                                            className={styles.consequencesLabel}
+                                          >
+                                            Expected Effects:
+                                          </span>
+                                          <ul
+                                            className={styles.consequencesList}
+                                          >
+                                            {action.consequences.map(
+                                              (eff, i) => (
+                                                <li key={i}>{eff}</li>
+                                              ),
+                                            )}
+                                          </ul>
+                                        </div>
+                                      )}
+                                    {action.arguments &&
+                                      Object.keys(action.arguments).length >
+                                        0 && (
+                                        <details
+                                          className={styles.confirmationDetails}
+                                        >
+                                          <summary>View Raw Parameters</summary>
+                                          <pre className={styles.toolCodeBlock}>
+                                            {JSON.stringify(
+                                              action.arguments,
+                                              null,
+                                              2,
+                                            )}
+                                          </pre>
+                                        </details>
+                                      )}
+                                    {(canRevert || canReapply) && (
+                                      <div
+                                        className={styles.committedActionFooter}
+                                      >
+                                        {canRevert && (
+                                          <button
+                                            type="button"
+                                            className={styles.revertButton}
+                                            disabled={isReverting}
+                                            onClick={() =>
+                                              handleRevertAction(
+                                                m.id,
+                                                action.id,
+                                              )
+                                            }
+                                          >
+                                            {isReverting
+                                              ? "Reverting..."
+                                              : "Revert Change"}
+                                          </button>
+                                        )}
+                                        {canReapply && (
+                                          <button
+                                            type="button"
+                                            className={styles.reapplyButton}
+                                            disabled={isReverting}
+                                            onClick={() =>
+                                              handleReapplyAction(
+                                                m.id,
+                                                action.id,
+                                              )
+                                            }
+                                          >
+                                            {isReverting
+                                              ? "Applying..."
+                                              : "Re-apply Change"}
+                                          </button>
+                                        )}
+                                      </div>
                                     )}
                                   </div>
                                 );
                               })}
                             </div>
-                          );
-                        })()}
-                      {m.committedActions && m.committedActions.length > 0 && (
-                        <div className={styles.committedActionsList}>
-                          {m.committedActions.map((action) => {
-                            const canRevert =
-                              action.status === "committed" &&
-                              Boolean(action.revertData);
-                            const canReapply = action.status === "reverted";
-                            const isReverting = revertingActionId === action.id;
-
-                            return (
-                              <div
-                                key={action.id}
-                                className={clsx(
-                                  styles.committedActionCard,
-                                  action.status === "committed" &&
-                                    styles.actionStatusCommitted,
-                                  action.status === "discarded" &&
-                                    styles.actionStatusDiscarded,
-                                  action.status === "reverted" &&
-                                    styles.actionStatusReverted,
-                                )}
-                              >
-                                <div className={styles.committedActionHeader}>
-                                  <span className={styles.committedActionTitle}>
-                                    {action.status === "committed"
-                                      ? "Committed Action"
-                                      : action.status === "reverted"
-                                        ? "Reverted Action"
-                                        : "Discarded Action"}
+                          )}
+                        {m.thinking ? (
+                          <div className={styles.thinkingWrapper}>
+                            <div className={styles.thinkingContainer}>
+                              <PulseLoader size="8px" spacing="6px" />
+                              <span className={styles.thinkingStatusText}>
+                                {m.statusText || "Thinking..."}
+                              </span>
+                            </div>
+                            {pendingConfirmation && (
+                              <div className={styles.confirmationCard}>
+                                <div className={styles.confirmationHeader}>
+                                  <span className={styles.confirmationTitle}>
+                                    Commit Workbench Change
                                   </span>
-                                  <span
-                                    className={styles.committedActionToolName}
-                                  >
-                                    {action.toolName}
-                                  </span>
-                                  <span
-                                    className={clsx(
-                                      styles.actionStatusBadge,
-                                      action.status === "committed" &&
-                                        styles.badgeCommitted,
-                                      action.status === "discarded" &&
-                                        styles.badgeDiscarded,
-                                      action.status === "reverted" &&
-                                        styles.badgeReverted,
-                                    )}
-                                  >
-                                    {action.status === "committed"
-                                      ? "Committed"
-                                      : action.status === "reverted"
-                                        ? "Reverted"
-                                        : "Discarded"}
+                                  <span className={styles.confirmationToolName}>
+                                    {pendingConfirmation.request.toolName}
                                   </span>
                                 </div>
-                                <p
-                                  className={styles.committedActionDescription}
-                                >
-                                  {action.description}
-                                </p>
-                                {action.changes &&
-                                  action.changes.length > 0 && (
-                                    <div className={styles.changeTable}>
-                                      <div className={styles.changeTableHeader}>
-                                        <span>Property</span>
-                                        <span>Current</span>
-                                        <span></span>
-                                        <span>Proposed</span>
-                                      </div>
-                                      {action.changes.map((c, idx) => (
+                                <div className={styles.confirmationBody}>
+                                  <p className={styles.confirmationDescription}>
+                                    {pendingConfirmation.request.description}
+                                  </p>
+                                  {pendingConfirmation.request.changes &&
+                                    pendingConfirmation.request.changes.length >
+                                      0 && (
+                                      <div className={styles.changeTable}>
                                         <div
-                                          key={idx}
-                                          className={styles.changeTableRow}
+                                          className={styles.changeTableHeader}
                                         >
-                                          <span className={styles.changeField}>
-                                            {c.field}
-                                          </span>
-                                          <span
-                                            className={styles.changeCurrent}
-                                          >
-                                            {c.currentValue}
-                                          </span>
-                                          <span className={styles.changeArrow}>
-                                            -&gt;
-                                          </span>
-                                          <span
-                                            className={styles.changeProposed}
-                                          >
-                                            {c.proposedValue}
-                                          </span>
+                                          <span>Property</span>
+                                          <span>Current</span>
+                                          <span></span>
+                                          <span>Proposed</span>
                                         </div>
-                                      ))}
-                                    </div>
-                                  )}
-                                {action.consequences &&
-                                  action.consequences.length > 0 && (
-                                    <div
-                                      className={styles.consequencesContainer}
-                                    >
-                                      <span
-                                        className={styles.consequencesLabel}
-                                      >
-                                        Expected Effects:
-                                      </span>
-                                      <ul className={styles.consequencesList}>
-                                        {action.consequences.map((eff, i) => (
-                                          <li key={i}>{eff}</li>
-                                        ))}
-                                      </ul>
-                                    </div>
-                                  )}
-                                {action.arguments &&
-                                  Object.keys(action.arguments).length > 0 && (
-                                    <details
-                                      className={styles.confirmationDetails}
-                                    >
-                                      <summary>View Raw Parameters</summary>
-                                      <pre className={styles.toolCodeBlock}>
-                                        {JSON.stringify(
-                                          action.arguments,
-                                          null,
-                                          2,
-                                        )}
-                                      </pre>
-                                    </details>
-                                  )}
-                                {(canRevert || canReapply) && (
-                                  <div className={styles.committedActionFooter}>
-                                    {canRevert && (
-                                      <button
-                                        type="button"
-                                        className={styles.revertButton}
-                                        disabled={isReverting}
-                                        onClick={() =>
-                                          handleRevertAction(m.id, action.id)
-                                        }
-                                      >
-                                        {isReverting
-                                          ? "Reverting..."
-                                          : "Revert Change"}
-                                      </button>
-                                    )}
-                                    {canReapply && (
-                                      <button
-                                        type="button"
-                                        className={styles.reapplyButton}
-                                        disabled={isReverting}
-                                        onClick={() =>
-                                          handleReapplyAction(m.id, action.id)
-                                        }
-                                      >
-                                        {isReverting
-                                          ? "Applying..."
-                                          : "Re-apply Change"}
-                                      </button>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                      {m.thinking ? (
-                        <div className={styles.thinkingWrapper}>
-                          <div className={styles.thinkingContainer}>
-                            <PulseLoader size="8px" spacing="6px" />
-                            <span className={styles.thinkingStatusText}>
-                              {m.statusText || "Thinking..."}
-                            </span>
-                          </div>
-                          {pendingConfirmation && (
-                            <div className={styles.confirmationCard}>
-                              <div className={styles.confirmationHeader}>
-                                <span className={styles.confirmationTitle}>
-                                  Commit Workbench Change
-                                </span>
-                                <span className={styles.confirmationToolName}>
-                                  {pendingConfirmation.request.toolName}
-                                </span>
-                              </div>
-                              <div className={styles.confirmationBody}>
-                                <p className={styles.confirmationDescription}>
-                                  {pendingConfirmation.request.description}
-                                </p>
-                                {pendingConfirmation.request.changes &&
-                                  pendingConfirmation.request.changes.length >
-                                    0 && (
-                                    <div className={styles.changeTable}>
-                                      <div className={styles.changeTableHeader}>
-                                        <span>Property</span>
-                                        <span>Current</span>
-                                        <span></span>
-                                        <span>Proposed</span>
-                                      </div>
-                                      {pendingConfirmation.request.changes.map(
-                                        (c, idx) => (
-                                          <div
-                                            key={idx}
-                                            className={styles.changeTableRow}
-                                          >
-                                            <span
-                                              className={styles.changeField}
+                                        {pendingConfirmation.request.changes.map(
+                                          (c, idx) => (
+                                            <div
+                                              key={idx}
+                                              className={styles.changeTableRow}
                                             >
-                                              {c.field}
-                                            </span>
-                                            <span
-                                              className={styles.changeCurrent}
-                                            >
-                                              {c.currentValue}
-                                            </span>
-                                            <span
-                                              className={styles.changeArrow}
-                                            >
-                                              -&gt;
-                                            </span>
-                                            <span
-                                              className={styles.changeProposed}
-                                            >
-                                              {c.proposedValue}
-                                            </span>
-                                          </div>
-                                        ),
-                                      )}
-                                    </div>
-                                  )}
-                                {pendingConfirmation.request.consequences &&
-                                  pendingConfirmation.request.consequences
-                                    .length > 0 && (
-                                    <div
-                                      className={styles.consequencesContainer}
-                                    >
-                                      <span
-                                        className={styles.consequencesLabel}
-                                      >
-                                        Expected Effects:
-                                      </span>
-                                      <ul className={styles.consequencesList}>
-                                        {pendingConfirmation.request.consequences.map(
-                                          (eff, i) => (
-                                            <li key={i}>{eff}</li>
+                                              <span
+                                                className={styles.changeField}
+                                              >
+                                                {c.field}
+                                              </span>
+                                              <span
+                                                className={styles.changeCurrent}
+                                              >
+                                                {c.currentValue}
+                                              </span>
+                                              <span
+                                                className={styles.changeArrow}
+                                              >
+                                                -&gt;
+                                              </span>
+                                              <span
+                                                className={
+                                                  styles.changeProposed
+                                                }
+                                              >
+                                                {c.proposedValue}
+                                              </span>
+                                            </div>
                                           ),
                                         )}
-                                      </ul>
-                                    </div>
-                                  )}
-                                {pendingConfirmation.request.arguments &&
-                                  Object.keys(
-                                    pendingConfirmation.request.arguments,
-                                  ).length > 0 && (
-                                    <details
-                                      className={styles.confirmationDetails}
-                                    >
-                                      <summary>View Raw Parameters</summary>
-                                      <pre className={styles.toolCodeBlock}>
-                                        {JSON.stringify(
-                                          pendingConfirmation.request.arguments,
-                                          null,
-                                          2,
-                                        )}
-                                      </pre>
-                                    </details>
-                                  )}
-                              </div>
-                              <div className={styles.confirmationActions}>
-                                <button
-                                  className={styles.rejectButton}
-                                  onClick={() =>
-                                    handleResolveConfirmation(false)
-                                  }
-                                >
-                                  Discard
-                                </button>
-                                <button
-                                  className={styles.approveButton}
-                                  onClick={() =>
-                                    handleResolveConfirmation(true)
-                                  }
-                                >
-                                  Commit Change
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      ) : m.role === "llm" ? (
-                        <ReactMarkdown
-                          remarkPlugins={[remarkGfm, remarkMath]}
-                          rehypePlugins={[
-                            [
-                              rehypeSanitize,
-                              {
-                                ...defaultSchema,
-                                attributes: {
-                                  ...defaultSchema.attributes,
-                                  div: [
-                                    ...(defaultSchema.attributes?.div || []),
-                                    ["className", "math", "math-display"],
-                                  ],
-                                  span: [
-                                    ...(defaultSchema.attributes?.span || []),
-                                    ["className", "math", "math-inline"],
-                                  ],
-                                  code: [
-                                    ...(defaultSchema.attributes?.code || []),
-                                    "className",
-                                  ],
-                                },
-                              },
-                            ],
-                            [rehypeKatex, { output: "mathml" }],
-                          ]}
-                          components={{
-                            code({
-                              node,
-                              inline,
-                              className,
-                              children,
-                              ...props
-                            }: any) {
-                              const codeText = String(children).replace(
-                                /\n$/,
-                                "",
-                              );
-
-                              const language =
-                                // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-                                /language-(\w+)/.exec(className || "")?.[1] ??
-                                "";
-
-                              // Only render code block wrapper for triple-backtick code (has language or contains newlines)
-                              const isCodeBlock =
-                                language || codeText.includes("\n");
-
-                              return inline || !isCodeBlock ? (
-                                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-                                <code {...props} className={className}>
-                                  {children}
-                                </code>
-                              ) : (
-                                <div className={styles.codeBlockWrapper}>
-                                  <div className={styles.codeBlockHeader}>
-                                    <div className={styles.codeBlockTitle}>
-                                      Code Block
-                                      {language ? ` (${language})` : ""}
-                                    </div>
-                                    <button
-                                      className={styles.copyButton}
-                                      onClick={() => {
-                                        void navigator.clipboard?.writeText(
-                                          codeText,
-                                        );
-                                      }}
-                                      aria-label="Copy code"
-                                    >
-                                      Copy
-                                    </button>
-                                  </div>
-                                  <div
-                                    className={styles.codeBlockContentWrapper}
-                                  >
-                                    <code {...props}>{children}</code>
-                                  </div>
+                                      </div>
+                                    )}
+                                  {pendingConfirmation.request.consequences &&
+                                    pendingConfirmation.request.consequences
+                                      .length > 0 && (
+                                      <div
+                                        className={styles.consequencesContainer}
+                                      >
+                                        <span
+                                          className={styles.consequencesLabel}
+                                        >
+                                          Expected Effects:
+                                        </span>
+                                        <ul className={styles.consequencesList}>
+                                          {pendingConfirmation.request.consequences.map(
+                                            (eff, i) => (
+                                              <li key={i}>{eff}</li>
+                                            ),
+                                          )}
+                                        </ul>
+                                      </div>
+                                    )}
+                                  {pendingConfirmation.request.arguments &&
+                                    Object.keys(
+                                      pendingConfirmation.request.arguments,
+                                    ).length > 0 && (
+                                      <details
+                                        className={styles.confirmationDetails}
+                                      >
+                                        <summary>View Raw Parameters</summary>
+                                        <pre className={styles.toolCodeBlock}>
+                                          {JSON.stringify(
+                                            pendingConfirmation.request
+                                              .arguments,
+                                            null,
+                                            2,
+                                          )}
+                                        </pre>
+                                      </details>
+                                    )}
                                 </div>
-                              );
-                            },
-                            // @ts-expect-error: math is not in Components type
-                            math: function MathComponent({
-                              node,
-                              className,
-                              children,
-                              ...props
-                            }: any) {
-                              const rawLatex = extractRawLatexFromHast(node);
+                                <div className={styles.confirmationActions}>
+                                  <button
+                                    className={styles.rejectButton}
+                                    onClick={() =>
+                                      handleResolveConfirmation(false)
+                                    }
+                                  >
+                                    Discard
+                                  </button>
+                                  <button
+                                    className={styles.approveButton}
+                                    onClick={() =>
+                                      handleResolveConfirmation(true)
+                                    }
+                                  >
+                                    Commit Change
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ) : m.role === "llm" ? (
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm, remarkMath]}
+                            rehypePlugins={[
+                              [
+                                rehypeSanitize,
+                                {
+                                  ...defaultSchema,
+                                  attributes: {
+                                    ...defaultSchema.attributes,
+                                    div: [
+                                      ...(defaultSchema.attributes?.div || []),
+                                      ["className", "math", "math-display"],
+                                    ],
+                                    span: [
+                                      ...(defaultSchema.attributes?.span || []),
+                                      ["className", "math", "math-inline"],
+                                    ],
+                                    code: [
+                                      ...(defaultSchema.attributes?.code || []),
+                                      "className",
+                                    ],
+                                  },
+                                },
+                              ],
+                              [rehypeKatex, { output: "mathml" }],
+                            ]}
+                            components={{
+                              code({
+                                node,
+                                inline,
+                                className,
+                                children,
+                                ...props
+                              }: any) {
+                                const codeText = String(children).replace(
+                                  /\n$/,
+                                  "",
+                                );
 
-                              const mathEl = (
-                                // @ts-expect-error: math is not in JSX types
-                                <math
-                                  {...props}
-                                  className={clsx(
-                                    className as string,
-                                    styles.mathEquation,
-                                  )}
-                                  data-testid="latex-math"
-                                >
-                                  {children}
-                                  {/* @ts-expect-error: math is not in JSX types */}
-                                </math>
-                              );
+                                const language =
+                                  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+                                  /language-(\w+)/.exec(className || "")?.[1] ??
+                                  "";
 
-                              return rawLatex ? (
-                                <ContextMenu.Root>
-                                  <ContextMenu.Trigger asChild>
-                                    <span
-                                      className={styles.mathContextMenuTrigger}
-                                    >
-                                      <Tooltip text="Right-click for options">
-                                        {mathEl}
-                                      </Tooltip>
-                                    </span>
-                                  </ContextMenu.Trigger>
-                                  <ContextMenu.Portal>
-                                    <ContextMenu.Content
-                                      className={styles.contextMenuContent}
-                                    >
-                                      <ContextMenu.Item
-                                        className={styles.contextMenuItem}
-                                        onSelect={() => {
+                                // Only render code block wrapper for triple-backtick code (has language or contains newlines)
+                                const isCodeBlock =
+                                  language || codeText.includes("\n");
+
+                                return inline || !isCodeBlock ? (
+                                  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                                  <code {...props} className={className}>
+                                    {children}
+                                  </code>
+                                ) : (
+                                  <div className={styles.codeBlockWrapper}>
+                                    <div className={styles.codeBlockHeader}>
+                                      <div className={styles.codeBlockTitle}>
+                                        Code Block
+                                        {language ? ` (${language})` : ""}
+                                      </div>
+                                      <button
+                                        className={styles.copyButton}
+                                        onClick={() => {
                                           void navigator.clipboard?.writeText(
-                                            rawLatex,
+                                            codeText,
                                           );
                                         }}
+                                        aria-label="Copy code"
                                       >
-                                        Copy formula
-                                      </ContextMenu.Item>
-                                    </ContextMenu.Content>
-                                  </ContextMenu.Portal>
-                                </ContextMenu.Root>
-                              ) : (
-                                mathEl
-                              );
-                            },
-                          }}
-                        >
-                          {m.text}
-                        </ReactMarkdown>
-                      ) : (
-                        <div className={styles.plainText}>{m.text}</div>
-                      )}
-                      {m.role === "llm" && !m.thinking && (
-                        <div className={styles.messageToolbar}>
-                          <button
-                            type="button"
-                            className={clsx(
-                              styles.messageToolbarButton,
-                              copiedMessageId === m.id &&
-                                styles.messageToolbarButtonCopied,
-                            )}
-                            onClick={() => handleCopyMessage(m.id, m.text)}
-                            aria-label="Copy message text"
-                            title="Copy message"
-                          >
-                            {copiedMessageId === m.id ? (
-                              <>
-                                <CheckIcon
-                                  width="0.85em"
-                                  height="0.85em"
-                                  aria-hidden
-                                />
-                                <span>Copied</span>
-                              </>
-                            ) : (
-                              <>
-                                <CopyIcon
-                                  width="0.85em"
-                                  height="0.85em"
-                                  aria-hidden
-                                />
-                                <span>Copy</span>
-                              </>
-                            )}
-                          </button>
+                                        Copy
+                                      </button>
+                                    </div>
+                                    <div
+                                      className={styles.codeBlockContentWrapper}
+                                    >
+                                      <code {...props}>{children}</code>
+                                    </div>
+                                  </div>
+                                );
+                              },
+                              // @ts-expect-error: math is not in Components type
+                              math: function MathComponent({
+                                node,
+                                className,
+                                children,
+                                ...props
+                              }: any) {
+                                const rawLatex = extractRawLatexFromHast(node);
 
-                          <button
-                            type="button"
-                            className={clsx(
-                              styles.messageToolbarButton,
-                              (openInfoMessageIds[m.id] ?? showDebugDetails) &&
-                                styles.messageToolbarButtonActive,
-                            )}
-                            onClick={() => toggleMessageInfo(m.id)}
-                            aria-label="More information"
-                            title="More information about this response"
-                            aria-expanded={
-                              openInfoMessageIds[m.id] ?? showDebugDetails
-                            }
-                          >
-                            <InfoIcon
-                              width="0.85em"
-                              height="0.85em"
-                              aria-hidden
-                            />
-                            <span>More info</span>
-                          </button>
-                        </div>
-                      )}
-
-                      {(showDebugDetails || openInfoMessageIds[m.id]) && (
-                        <div className={styles.debugContainer}>
-                          {m.debugInfo ? (
-                            <details
-                              className={styles.debugDetails}
-                              open={Boolean(openInfoMessageIds[m.id]) || showDebugDetails}
-                            >
-                            <summary className={styles.debugSummary}>
-                              <span className={styles.debugSummaryTitle}>
-                                Debug & Execution Details
-                              </span>
-                              <span className={styles.debugBadge}>
-                                {m.debugInfo.model}
-                              </span>
-                              <span className={styles.debugBadge}>
-                                {m.debugInfo.provider}
-                              </span>
-                              <span className={styles.debugBadge}>
-                                {m.debugInfo.totalTurns}{" "}
-                                {m.debugInfo.totalTurns === 1
-                                  ? "round"
-                                  : "rounds"}
-                              </span>
-                              <span className={styles.debugBadge}>
-                                {m.debugInfo.totalSteps}{" "}
-                                {m.debugInfo.totalSteps === 1
-                                  ? "action"
-                                  : "actions"}
-                              </span>
-                              {m.debugInfo.durationMs !== undefined && (
-                                <span className={styles.debugBadge}>
-                                  {(m.debugInfo.durationMs / 1000).toFixed(2)}s
-                                </span>
-                              )}
-                            </summary>
-                            <div className={styles.debugBody}>
-                              <details className={styles.debugSubDetails} open>
-                                <summary className={styles.debugSubSummary}>
-                                  <span>Assembled System Prompt & Context</span>
-                                  <button
-                                    type="button"
-                                    className={styles.debugCopyBtn}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      void navigator.clipboard?.writeText(
-                                        m.debugInfo!.systemPrompt,
-                                      );
-                                    }}
+                                const mathEl = (
+                                  // @ts-expect-error: math is not in JSX types
+                                  <math
+                                    {...props}
+                                    className={clsx(
+                                      className as string,
+                                      styles.mathEquation,
+                                    )}
+                                    data-testid="latex-math"
                                   >
-                                    Copy Prompt
-                                  </button>
-                                </summary>
-                                <pre className={styles.debugCodeBlock}>
-                                  {m.debugInfo.systemPrompt}
-                                </pre>
-                              </details>
+                                    {children}
+                                    {/* @ts-expect-error: math is not in JSX types */}
+                                  </math>
+                                );
 
-                              {m.debugInfo.turns &&
-                                m.debugInfo.turns.length > 0 && (
+                                return rawLatex ? (
+                                  <ContextMenu.Root>
+                                    <ContextMenu.Trigger asChild>
+                                      <span
+                                        className={
+                                          styles.mathContextMenuTrigger
+                                        }
+                                      >
+                                        <Tooltip text="Right-click for options">
+                                          {mathEl}
+                                        </Tooltip>
+                                      </span>
+                                    </ContextMenu.Trigger>
+                                    <ContextMenu.Portal>
+                                      <ContextMenu.Content
+                                        className={styles.contextMenuContent}
+                                      >
+                                        <ContextMenu.Item
+                                          className={styles.contextMenuItem}
+                                          onSelect={() => {
+                                            void navigator.clipboard?.writeText(
+                                              rawLatex,
+                                            );
+                                          }}
+                                        >
+                                          Copy formula
+                                        </ContextMenu.Item>
+                                      </ContextMenu.Content>
+                                    </ContextMenu.Portal>
+                                  </ContextMenu.Root>
+                                ) : (
+                                  mathEl
+                                );
+                              },
+                            }}
+                          >
+                            {m.text}
+                          </ReactMarkdown>
+                        ) : (
+                          <div className={styles.plainText}>{m.text}</div>
+                        )}
+                        {m.role === "llm" && !m.thinking && (
+                          <div className={styles.messageToolbar}>
+                            <button
+                              type="button"
+                              className={clsx(
+                                styles.messageToolbarButton,
+                                copiedMessageId === m.id &&
+                                  styles.messageToolbarButtonCopied,
+                              )}
+                              onClick={() => handleCopyMessage(m.id, m.text)}
+                              aria-label="Copy message text"
+                              title="Copy message"
+                            >
+                              {copiedMessageId === m.id ? (
+                                <>
+                                  <CheckIcon
+                                    width="0.85em"
+                                    height="0.85em"
+                                    aria-hidden
+                                  />
+                                  <span>Copied</span>
+                                </>
+                              ) : (
+                                <>
+                                  <CopyIcon
+                                    width="0.85em"
+                                    height="0.85em"
+                                    aria-hidden
+                                  />
+                                  <span>Copy</span>
+                                </>
+                              )}
+                            </button>
+
+                            <button
+                              type="button"
+                              className={clsx(
+                                styles.messageToolbarButton,
+                                (openInfoMessageIds[m.id] ??
+                                  showDebugDetails) &&
+                                  styles.messageToolbarButtonActive,
+                              )}
+                              onClick={() => toggleMessageInfo(m.id)}
+                              aria-label="More information"
+                              title="More information about this response"
+                              aria-expanded={
+                                openInfoMessageIds[m.id] ?? showDebugDetails
+                              }
+                            >
+                              <InfoIcon
+                                width="0.85em"
+                                height="0.85em"
+                                aria-hidden
+                              />
+                              <span>More info</span>
+                            </button>
+                          </div>
+                        )}
+
+                        {(showDebugDetails || openInfoMessageIds[m.id]) && (
+                          <div className={styles.debugContainer}>
+                            {m.debugInfo ? (
+                              <details
+                                className={styles.debugDetails}
+                                open={
+                                  Boolean(openInfoMessageIds[m.id]) ||
+                                  showDebugDetails
+                                }
+                              >
+                                <summary className={styles.debugSummary}>
+                                  <span className={styles.debugSummaryTitle}>
+                                    Debug & Execution Details
+                                  </span>
+                                  <span className={styles.debugBadge}>
+                                    {m.debugInfo.model}
+                                  </span>
+                                  <span className={styles.debugBadge}>
+                                    {m.debugInfo.provider}
+                                  </span>
+                                  <span className={styles.debugBadge}>
+                                    {m.debugInfo.totalTurns}{" "}
+                                    {m.debugInfo.totalTurns === 1
+                                      ? "round"
+                                      : "rounds"}
+                                  </span>
+                                  <span className={styles.debugBadge}>
+                                    {m.debugInfo.totalSteps}{" "}
+                                    {m.debugInfo.totalSteps === 1
+                                      ? "action"
+                                      : "actions"}
+                                  </span>
+                                  {m.debugInfo.durationMs !== undefined && (
+                                    <span className={styles.debugBadge}>
+                                      {(m.debugInfo.durationMs / 1000).toFixed(
+                                        2,
+                                      )}
+                                      s
+                                    </span>
+                                  )}
+                                </summary>
+                                <div className={styles.debugBody}>
                                   <details
                                     className={styles.debugSubDetails}
                                     open
                                   >
                                     <summary className={styles.debugSubSummary}>
                                       <span>
-                                        Multi-Turn Execution Log (
-                                        {m.debugInfo.turns.length} rounds)
+                                        Assembled System Prompt & Context
                                       </span>
+                                      <button
+                                        type="button"
+                                        className={styles.debugCopyBtn}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          void navigator.clipboard?.writeText(
+                                            m.debugInfo!.systemPrompt,
+                                          );
+                                        }}
+                                      >
+                                        Copy Prompt
+                                      </button>
                                     </summary>
-                                    <div className={styles.turnList}>
-                                      {m.debugInfo.turns.map((turn) => (
-                                        <div
-                                          key={turn.turn}
-                                          className={styles.turnCard}
+                                    <pre className={styles.debugCodeBlock}>
+                                      {m.debugInfo.systemPrompt}
+                                    </pre>
+                                  </details>
+
+                                  {m.debugInfo.turns &&
+                                    m.debugInfo.turns.length > 0 && (
+                                      <details
+                                        className={styles.debugSubDetails}
+                                        open
+                                      >
+                                        <summary
+                                          className={styles.debugSubSummary}
                                         >
-                                          <div className={styles.turnHeader}>
-                                            <span className={styles.stepBadge}>
-                                              Round {turn.turn}
-                                            </span>
-                                            <span
-                                              className={styles.turnSummaryText}
+                                          <span>
+                                            Multi-Turn Execution Log (
+                                            {m.debugInfo.turns.length} rounds)
+                                          </span>
+                                        </summary>
+                                        <div className={styles.turnList}>
+                                          {m.debugInfo.turns.map((turn) => (
+                                            <div
+                                              key={turn.turn}
+                                              className={styles.turnCard}
                                             >
-                                              {turn.modelResponse.toolCalls
-                                                .length > 0
-                                                ? `${turn.modelResponse.toolCalls.length} tool call(s) requested`
-                                                : "Direct text response"}
-                                            </span>
-                                          </div>
-                                          {turn.modelResponse.text && (
-                                            <div className={styles.turnSection}>
                                               <div
-                                                className={
-                                                  styles.turnSectionLabel
-                                                }
+                                                className={styles.turnHeader}
                                               >
-                                                Model Output:
-                                              </div>
-                                              <div
-                                                className={
-                                                  styles.turnSectionText
-                                                }
-                                              >
-                                                {turn.modelResponse.text}
-                                              </div>
-                                            </div>
-                                          )}
-                                          {turn.modelResponse.toolCalls.length >
-                                            0 && (
-                                            <div className={styles.turnSection}>
-                                              <div
-                                                className={
-                                                  styles.turnSectionLabel
-                                                }
-                                              >
-                                                Requested Tool Invocations:
-                                              </div>
-                                              {turn.modelResponse.toolCalls.map(
-                                                (call) => (
-                                                  <div
-                                                    key={call.id}
-                                                    className={
-                                                      styles.toolCallItem
-                                                    }
-                                                  >
-                                                    <div
-                                                      className={
-                                                        styles.toolCallName
-                                                      }
-                                                    >
-                                                      <code>{call.name}</code>{" "}
-                                                      <span
-                                                        className={
-                                                          styles.toolCallId
-                                                        }
-                                                      >
-                                                        ({call.id})
-                                                      </span>
-                                                    </div>
-                                                    <pre
-                                                      className={
-                                                        styles.debugCodeBlock
-                                                      }
-                                                    >
-                                                      {JSON.stringify(
-                                                        call.arguments,
-                                                        null,
-                                                        2,
-                                                      )}
-                                                    </pre>
-                                                  </div>
-                                                ),
-                                              )}
-                                            </div>
-                                          )}
-                                          {turn.toolExecutions &&
-                                            turn.toolExecutions.length > 0 && (
-                                              <div
-                                                className={styles.turnSection}
-                                              >
-                                                <div
+                                                <span
+                                                  className={styles.stepBadge}
+                                                >
+                                                  Round {turn.turn}
+                                                </span>
+                                                <span
                                                   className={
-                                                    styles.turnSectionLabel
+                                                    styles.turnSummaryText
                                                   }
                                                 >
-                                                  Tool Execution Observations:
+                                                  {turn.modelResponse.toolCalls
+                                                    .length > 0
+                                                    ? `${turn.modelResponse.toolCalls.length} tool call(s) requested`
+                                                    : "Direct text response"}
+                                                </span>
+                                              </div>
+                                              {turn.modelResponse.text && (
+                                                <div
+                                                  className={styles.turnSection}
+                                                >
+                                                  <div
+                                                    className={
+                                                      styles.turnSectionLabel
+                                                    }
+                                                  >
+                                                    Model Output:
+                                                  </div>
+                                                  <div
+                                                    className={
+                                                      styles.turnSectionText
+                                                    }
+                                                  >
+                                                    {turn.modelResponse.text}
+                                                  </div>
                                                 </div>
-                                                {turn.toolExecutions.map(
-                                                  (exec) => (
-                                                    <div
-                                                      key={exec.id}
-                                                      className={
-                                                        styles.toolExecItem
-                                                      }
-                                                    >
+                                              )}
+                                              {turn.modelResponse.toolCalls
+                                                .length > 0 && (
+                                                <div
+                                                  className={styles.turnSection}
+                                                >
+                                                  <div
+                                                    className={
+                                                      styles.turnSectionLabel
+                                                    }
+                                                  >
+                                                    Requested Tool Invocations:
+                                                  </div>
+                                                  {turn.modelResponse.toolCalls.map(
+                                                    (call) => (
                                                       <div
+                                                        key={call.id}
                                                         className={
-                                                          styles.toolExecHeader
+                                                          styles.toolCallItem
                                                         }
                                                       >
-                                                        <span
+                                                        <div
                                                           className={
-                                                            styles.stepBadge
+                                                            styles.toolCallName
                                                           }
                                                         >
-                                                          Step {exec.step}
-                                                        </span>
-                                                        <code>{exec.name}</code>
-                                                        <span
-                                                          className={clsx(
-                                                            styles.statusBadge,
-                                                            exec.result.success
-                                                              ? styles.statusSuccess
-                                                              : styles.statusError,
-                                                          )}
-                                                        >
-                                                          {exec.result.success
-                                                            ? "Success"
-                                                            : "Failed"}
-                                                        </span>
-                                                      </div>
-                                                      <div
-                                                        className={
-                                                          styles.toolExecMessage
-                                                        }
-                                                      >
-                                                        {exec.result.message}
-                                                      </div>
-                                                      {exec.result.data !==
-                                                        undefined && (
+                                                          <code>
+                                                            {call.name}
+                                                          </code>{" "}
+                                                          <span
+                                                            className={
+                                                              styles.toolCallId
+                                                            }
+                                                          >
+                                                            ({call.id})
+                                                          </span>
+                                                        </div>
                                                         <pre
                                                           className={
                                                             styles.debugCodeBlock
                                                           }
                                                         >
                                                           {JSON.stringify(
-                                                            exec.result.data,
+                                                            call.arguments,
                                                             null,
                                                             2,
                                                           )}
                                                         </pre>
-                                                      )}
-                                                      {exec.result.error && (
+                                                      </div>
+                                                    ),
+                                                  )}
+                                                </div>
+                                              )}
+                                              {turn.toolExecutions &&
+                                                turn.toolExecutions.length >
+                                                  0 && (
+                                                  <div
+                                                    className={
+                                                      styles.turnSection
+                                                    }
+                                                  >
+                                                    <div
+                                                      className={
+                                                        styles.turnSectionLabel
+                                                      }
+                                                    >
+                                                      Tool Execution
+                                                      Observations:
+                                                    </div>
+                                                    {turn.toolExecutions.map(
+                                                      (exec) => (
                                                         <div
+                                                          key={exec.id}
                                                           className={
-                                                            styles.toolExecError
+                                                            styles.toolExecItem
                                                           }
                                                         >
-                                                          {exec.result.error}
+                                                          <div
+                                                            className={
+                                                              styles.toolExecHeader
+                                                            }
+                                                          >
+                                                            <span
+                                                              className={
+                                                                styles.stepBadge
+                                                              }
+                                                            >
+                                                              Step {exec.step}
+                                                            </span>
+                                                            <code>
+                                                              {exec.name}
+                                                            </code>
+                                                            <span
+                                                              className={clsx(
+                                                                styles.statusBadge,
+                                                                exec.result
+                                                                  .success
+                                                                  ? styles.statusSuccess
+                                                                  : styles.statusError,
+                                                              )}
+                                                            >
+                                                              {exec.result
+                                                                .success
+                                                                ? "Success"
+                                                                : "Failed"}
+                                                            </span>
+                                                          </div>
+                                                          <div
+                                                            className={
+                                                              styles.toolExecMessage
+                                                            }
+                                                          >
+                                                            {
+                                                              exec.result
+                                                                .message
+                                                            }
+                                                          </div>
+                                                          {exec.result.data !==
+                                                            undefined && (
+                                                            <pre
+                                                              className={
+                                                                styles.debugCodeBlock
+                                                              }
+                                                            >
+                                                              {JSON.stringify(
+                                                                exec.result
+                                                                  .data,
+                                                                null,
+                                                                2,
+                                                              )}
+                                                            </pre>
+                                                          )}
+                                                          {exec.result
+                                                            .error && (
+                                                            <div
+                                                              className={
+                                                                styles.toolExecError
+                                                              }
+                                                            >
+                                                              {
+                                                                exec.result
+                                                                  .error
+                                                              }
+                                                            </div>
+                                                          )}
                                                         </div>
-                                                      )}
-                                                    </div>
-                                                  ),
+                                                      ),
+                                                    )}
+                                                  </div>
                                                 )}
-                                              </div>
-                                            )}
+                                            </div>
+                                          ))}
                                         </div>
-                                      ))}
-                                    </div>
-                                  </details>
-                                )}
+                                      </details>
+                                    )}
 
-                              {m.debugInfo.initialMessages &&
-                                m.debugInfo.initialMessages.length > 0 && (
+                                  {m.debugInfo.initialMessages &&
+                                    m.debugInfo.initialMessages.length > 0 && (
+                                      <details
+                                        className={styles.debugSubDetails}
+                                      >
+                                        <summary
+                                          className={styles.debugSubSummary}
+                                        >
+                                          <span>
+                                            Initial Conversation Input (
+                                            {m.debugInfo.initialMessages.length}{" "}
+                                            messages)
+                                          </span>
+                                        </summary>
+                                        <pre className={styles.debugCodeBlock}>
+                                          {JSON.stringify(
+                                            m.debugInfo.initialMessages,
+                                            null,
+                                            2,
+                                          )}
+                                        </pre>
+                                      </details>
+                                    )}
+
                                   <details className={styles.debugSubDetails}>
                                     <summary className={styles.debugSubSummary}>
-                                      <span>
-                                        Initial Conversation Input (
-                                        {m.debugInfo.initialMessages.length}{" "}
-                                        messages)
-                                      </span>
+                                      <span>Raw Diagnostics JSON</span>
+                                      <button
+                                        type="button"
+                                        className={styles.debugCopyBtn}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          void navigator.clipboard?.writeText(
+                                            JSON.stringify(
+                                              m.debugInfo,
+                                              null,
+                                              2,
+                                            ),
+                                          );
+                                        }}
+                                      >
+                                        Copy JSON
+                                      </button>
                                     </summary>
                                     <pre className={styles.debugCodeBlock}>
-                                      {JSON.stringify(
-                                        m.debugInfo.initialMessages,
-                                        null,
-                                        2,
-                                      )}
+                                      {JSON.stringify(m.debugInfo, null, 2)}
                                     </pre>
                                   </details>
-                                )}
-
-                              <details className={styles.debugSubDetails}>
-                                <summary className={styles.debugSubSummary}>
-                                  <span>Raw Diagnostics JSON</span>
-                                  <button
-                                    type="button"
-                                    className={styles.debugCopyBtn}
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      void navigator.clipboard?.writeText(
-                                        JSON.stringify(m.debugInfo, null, 2),
-                                      );
+                                </div>
+                              </details>
+                            ) : (
+                              <details className={styles.debugDetails} open>
+                                <summary className={styles.debugSummary}>
+                                  <span className={styles.debugSummaryTitle}>
+                                    Response Information
+                                  </span>
+                                  <span className={styles.debugBadge}>
+                                    Assistant
+                                  </span>
+                                  <span className={styles.debugBadge}>
+                                    {m.text.length} chars
+                                  </span>
+                                </summary>
+                                <div className={styles.debugBody}>
+                                  <p
+                                    style={{
+                                      margin: "var(--spacing-2) 0",
+                                      fontSize: "var(--font-size-small)",
                                     }}
                                   >
-                                    Copy JSON
-                                  </button>
-                                </summary>
-                                <pre className={styles.debugCodeBlock}>
-                                  {JSON.stringify(m.debugInfo, null, 2)}
-                                </pre>
+                                    Standard assistant response. Detailed
+                                    execution logs are recorded during
+                                    multi-turn simulation actions.
+                                  </p>
+                                </div>
                               </details>
-                            </div>
-                          </details>
-                        ) : (
-                          <details className={styles.debugDetails} open>
-                            <summary className={styles.debugSummary}>
-                              <span className={styles.debugSummaryTitle}>
-                                Response Information
-                              </span>
-                              <span className={styles.debugBadge}>
-                                Assistant
-                              </span>
-                              <span className={styles.debugBadge}>
-                                {m.text.length} chars
-                              </span>
-                            </summary>
-                            <div className={styles.debugBody}>
-                              <p
-                                style={{
-                                  margin: "var(--spacing-2) 0",
-                                  fontSize: "var(--font-size-small)",
-                                }}
-                              >
-                                Standard assistant response. Detailed execution logs are recorded during multi-turn simulation actions.
-                              </p>
-                            </div>
-                          </details>
+                            )}
+                          </div>
                         )}
                       </div>
-                    )}
                     </div>
-                  </div>
-                ))}
-              </div>
-                            {renderInputRow(false)}
-            </>
-          )}
-        </div>
+                  ))}
+                </div>
+                {renderInputRow(false)}
+              </>
+            )}
+          </div>
         )}
       </div>
     </div>

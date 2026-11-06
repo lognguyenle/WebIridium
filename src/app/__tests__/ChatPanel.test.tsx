@@ -664,7 +664,9 @@ describe("ChatPanel", () => {
     await userEvent.type(input, "Tell me about glycolysis");
     await userEvent.click(screen.getByLabelText("Send message"));
 
-    const matchingTexts = await screen.findAllByText("Detailed biological response to copy.");
+    const matchingTexts = await screen.findAllByText(
+      "Detailed biological response to copy.",
+    );
     expect(matchingTexts.length).toBeGreaterThanOrEqual(1);
 
     // Toolbar buttons
@@ -683,7 +685,9 @@ describe("ChatPanel", () => {
     });
 
     await userEvent.click(copyBtn);
-    expect(writeTextMock).toHaveBeenCalledWith("Detailed biological response to copy.");
+    expect(writeTextMock).toHaveBeenCalledWith(
+      "Detailed biological response to copy.",
+    );
     expect(screen.getByText("Copied")).toBeInTheDocument();
 
     // Click More info button to toggle details
